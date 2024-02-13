@@ -1,7 +1,7 @@
-Copyright (c) 2022 Robin Rombach and Patrick Esser and contributors
+Copyright (c) 2024 Adam Klein
 
 CreativeML Open RAIL-M
-dated August 22, 2022
+dated February 13, 2024
 
 Section I: PREAMBLE
 
