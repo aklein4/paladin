@@ -159,12 +159,14 @@ class PaladinTrainer:
         api.upload_file(
             path_or_fileobj=csv_file,
             path_in_repo="log.csv",
-            repo_id=self.save_repo,
+            repo_id=f"aklein4/{self.save_repo}",
+            repo_type="model"
         )
         api.upload_file(
             path_or_fileobj=png_file,
             path_in_repo="progress.png",
-            repo_id=self.save_repo,
+            repo_id=f"aklein4/{self.save_repo}",
+            repo_type="model"
         )
 
 

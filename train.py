@@ -13,16 +13,16 @@ VAL_DATA_URL = 'JeanKaddour/minipile'
 
 TRAIN_INIT_CONFIG = {
     "lr": 1e-5,
-    "eval_freq": 100,
+    "eval_freq": 500,
     "save_freq": 10000,
-    "kl_limit": 256,
+    "kl_limit": 128,
     "kl_penalty": 1.0
 }
 
 TRAIN_RUN_CONFIG = {
-    "num_steps": 60000,
+    "num_steps": 50000,
     "warmup_steps": 5000, # 5000
-    "batch_size": 2,
+    "batch_size": 24,
     "seed": 0
 }
 
@@ -31,7 +31,7 @@ MODEL_CONFIG = {
     "prompt_length": 8,
     "z_window": 16,
 
-    "latent_size": 256,
+    "latent_size": 128,
 
     "attn_pdrop": 0.0,
     "embd_pdrop": 0.0,
@@ -61,9 +61,9 @@ def main():
     val_loader = FullLoader(VAL_DATA_URL, train=False, debug=False)
 
     trainer = PaladinTrainer(
-        "el4_test",
+        "128-lowkl",
         tokenizer,
-        init_log=True,
+        init_log=False,
         **TRAIN_INIT_CONFIG
     )
 

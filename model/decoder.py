@@ -58,8 +58,6 @@ class DecoderModel(BaseModel):
     ) -> torch.Tensor:
         x = self.pre_forward(input_ids, token_type_ids, position_ids)
 
-        assert torch.allclose(x, memory[0])
-
         j_in = self.wje(j)
 
         # run model
