@@ -35,8 +35,6 @@ class BaseBlock(nn.Module):
         memory: torch.Tensor=None,
         **kwargs
     ) -> torch.Tensor:
-        x = x.clone()
-
         if memory is None:
             memory = x
 
@@ -46,7 +44,7 @@ class BaseBlock(nn.Module):
             encoder_hidden_states=self.ln_mem(memory),
             encoder_attention_mask=gpt2_causal_mask(memory, self.attn.num_heads)
         )[0] # output_attn: a, present, (attentions)
-        x += x_attn
+        x = x + x_attn
 
         # child extras
         x = self.subforward(x, **kwargs)
@@ -55,7 +53,7 @@ class BaseBlock(nn.Module):
         x_ff = self.mlp(
             self.ln_2(x)
         )
-        x += x_ff
+        x = x + x_ff
 
         return x
 

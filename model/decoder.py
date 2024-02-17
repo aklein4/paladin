@@ -27,11 +27,11 @@ class DecoderBlock(BaseBlock):
         
         # attend to z index
         x_j = self.attn_j(x, j)
-        x += x_j
+        x = x + x_j
 
         # attend to z
         x_z = self.attn_z(x, z)
-        x += x_z
+        x = x + x_z
 
         return x
 
