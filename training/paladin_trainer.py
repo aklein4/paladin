@@ -234,7 +234,7 @@ class PaladinTrainer:
                     # calculate decoder logits
                     decoder_out = paladin.decode(
                         **x, memory=memory,
-                        z=z_info.z, i_z=z_info.i_z
+                        z=z_info.z, j=z_info.j
                     )
 
                     # get logp(x|z)
@@ -325,7 +325,7 @@ class PaladinTrainer:
                 # calculate decoder logits
                 decoder_out = paladin.decode(
                     **x, memory=memory,
-                    z=z_info.z, i_z=z_info.i_z
+                    z=z_info.z, j=z_info.j
                 )
 
                 # get logp(x|z)
