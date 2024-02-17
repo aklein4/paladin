@@ -18,17 +18,17 @@ class PaladinConfig(GPT2Config):
     model_type = "paladin"
 
     def __init__(
-            self,
-            latent_size=128,
-            z_window=16,
-            context_length=128,
-            prompt_length=8,
-            **kwargs
+        self,
+        latent_size=128,
+        z_window=16,
+        context_length=128,
+        prompt_length=8,
+        **kwargs
     ):
         self.latent_size = latent_size
         self.z_window = z_window
         self.context_length=context_length
-        prompt_length=prompt_length
+        self.prompt_length=prompt_length
 
         super().__init__(**kwargs)
 
@@ -40,6 +40,7 @@ class PaladinModel(PreTrainedModel):
         super().__init__(config)
         self.context_length = config.context_length
         self.z_window = config.z_window
+        self.prompt_length = config.prompt_length
 
         # encoder + its heads
         self.encoder = BaseModel(config)

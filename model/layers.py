@@ -4,6 +4,7 @@ import torch.nn.functional as F
 
 
 class OneXAttention(nn.Module):
+    
     def __init__(self, hidden_size, other_size, config):
         super().__init__()
 
