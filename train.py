@@ -52,8 +52,6 @@ def main():
         MODEL_CONFIG,
     )
 
-    print(paladin.device)
-
     # optimizer_state = torch.load(
     #         os.path.join(PATH, "epoch_1", "checkpoint", "optimizer.pt")
     # )

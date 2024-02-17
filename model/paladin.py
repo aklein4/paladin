@@ -75,7 +75,7 @@ class PaladinModel(PreTrainedModel):
 
         # importance sampling weights for each position
         w_pos = (r_locs - l_locs).float() / config.z_window
-        w_pos = torch.cat([torch.zeros_like(pos_fake).float(), w_pos], dim=-1)
+        w_pos[:, :config.prompt_length] = 0
         self.register_buffer("w_pos", w_pos[:, :-1], persistent=False)
 
         # Initialize weights and apply final processing
