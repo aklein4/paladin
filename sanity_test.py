@@ -16,7 +16,7 @@ def paladin_sanity_check(url):
     tokenizer = GPT2TokenizerFast.from_pretrained(TEST_MODEL)
     model = GPT2LMHeadModel.from_pretrained(TEST_MODEL)
 
-    paladin = PaladinModel.from_gpt2lm(
+    paladin = PaladinModel.from_gpt2lm( 
         model,
         {"latent_size": 256, "z_window": 16, "context_length": 128, "prompt_length": 8},
         debug=True
@@ -27,16 +27,16 @@ def paladin_sanity_check(url):
     model = model.eval()
     paladin = paladin.eval()
 
-    inputs = tokenizer("This is a test", return_tensors="pt").to(DEVICE)
+    inputs = tokenizer("This is a test", return_tensors="pt").to(constants.DEVICE)
 
     print("Running sanity check...")
     model_out = model.transformer(**inputs, output_attentions=True, output_hidden_states=True)
-    memory_out = paladin.memory(**inputs)
-    encoder_out = paladin.encoder(**inputs)
+    memory_out = paladin.memory(inputs.input_ids)
+    encoder_out = paladin.encoder(inputs.input_ids)
     decoder_out = paladin.decoder(
         **inputs, memory=memory_out.memory,
         z=paladin.mu_head(encoder_out.output),
-        i_z=torch.zeros_like(inputs.input_ids)
+        j=torch.zeros_like(inputs.input_ids)
     )
 
     try:

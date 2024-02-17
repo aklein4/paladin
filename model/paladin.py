@@ -160,7 +160,7 @@ class PaladinModel(PreTrainedModel):
 
 
     @staticmethod
-    def from_gpt2(model, args, debug=False):
+    def from_gpt2lm(model, args, debug=False):
 
         # create config
         config = model.config

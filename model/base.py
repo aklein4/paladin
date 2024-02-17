@@ -35,6 +35,8 @@ class BaseBlock(nn.Module):
         memory: torch.Tensor=None,
         **kwargs
     ) -> torch.Tensor:
+        x = x.clone()
+
         if memory is None:
             memory = x
 
