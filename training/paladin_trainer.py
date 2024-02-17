@@ -53,11 +53,13 @@ class PaladinTrainer:
     ):
         self.save_name = save_name
         self.save_path = os.path.join(constants.LOCAL_DATA_PATH, save_name)
-        self.save_repo = f"paladin-{save_name}"
         os.makedirs(self.save_path, exist_ok=True)
+
+        save_repo = f"paladin-{save_name}"
         hf.create_repo(
-            self.save_repo, private=True, exist_ok=True
+            save_repo, private=True, exist_ok=True
         )
+        self.save_repo = f"{constants.HF_ID}/{save_repo}"
 
         self.tokenizer = tokenizer
         self.lr = lr
@@ -159,13 +161,13 @@ class PaladinTrainer:
         api.upload_file(
             path_or_fileobj=csv_file,
             path_in_repo="log.csv",
-            repo_id=f"aklein4/{self.save_repo}",
+            repo_id=self.save_repo,
             repo_type="model"
         )
         api.upload_file(
             path_or_fileobj=png_file,
             path_in_repo="progress.png",
-            repo_id=f"aklein4/{self.save_repo}",
+            repo_id=self.save_repo,
             repo_type="model"
         )
 
@@ -180,6 +182,8 @@ class PaladinTrainer:
 
         paladin.save_pretrained(os.path.join(checkpoint_path, "paladin"))
         torch.save(optimizer.state_dict(), os.path.join(checkpoint_path, "optimizer.pt"))
+
+        paladin.push_to_hub(self.save_repo)
 
 
     @torch.no_grad()

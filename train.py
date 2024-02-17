@@ -12,23 +12,23 @@ TRAIN_DATA_URL = 'EleutherAI/the_pile_deduplicated'
 VAL_DATA_URL = 'JeanKaddour/minipile'
 
 TRAIN_INIT_CONFIG = {
-    "lr": 1e-5,
-    "eval_freq": 500,
-    "save_freq": 10000,
-    "kl_limit": 128,
+    "lr": 3e-6,
+    "eval_freq": 10,
+    "save_freq": 10,
+    "kl_limit": 256,
     "kl_penalty": 1.0
 }
 
 TRAIN_RUN_CONFIG = {
-    "num_steps": 50000,
+    "num_steps": 15,
     "warmup_steps": 5000, # 5000
-    "batch_size": 24,
+    "batch_size": 16,
     "seed": 0
 }
 
 MODEL_CONFIG = {
     "context_length": 128,
-    "prompt_length": 8,
+    "prompt_length": 16,
     "z_window": 16,
 
     "latent_size": 128,
@@ -61,7 +61,7 @@ def main():
     val_loader = FullLoader(VAL_DATA_URL, train=False, debug=False)
 
     trainer = PaladinTrainer(
-        "128-lowkl",
+        "128-highkl",
         tokenizer,
         init_log=False,
         **TRAIN_INIT_CONFIG
