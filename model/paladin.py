@@ -61,21 +61,21 @@ class PaladinModel(PreTrainedModel):
         # remove the prompt from the context length
         out_length = config.context_length - config.prompt_length
         pos_out = torch.arange(0, out_length)[None].long()
-        pos_fake = torch.zeros(1, config.prompt_length).long()
+        pos_fake = torch.arange(0, config.prompt_length)[None].long()
 
         # the z locations that the given input token could use
         l_locs = torch.clip(pos_out + 1, min=config.z_window, max=out_length-1)
         r_locs = torch.clip(pos_out + config.z_window + 1, max=out_length)
 
-        l_locs = torch.cat([pos_fake, l_locs+config.prompt_length], dim=-1)
-        r_locs = torch.cat([pos_fake+1, r_locs+config.prompt_length], dim=-1)
+        l_locs = torch.cat([pos_fake+1, l_locs+config.prompt_length], dim=-1)
+        r_locs = torch.cat([pos_fake+2, r_locs+config.prompt_length], dim=-1)
         
         self.register_buffer("l_locs", l_locs, persistent=False)
         self.register_buffer("r_locs", r_locs, persistent=False)
 
         # importance sampling weights for each position
         w_pos = (r_locs - l_locs).float() / config.z_window
-        w_pos = torch.cat([pos_fake.float(), w_pos], dim=-1)
+        w_pos = torch.cat([torch.zeros_like(pos_fake).float(), w_pos], dim=-1)
         self.register_buffer("w_pos", w_pos[:, :-1], persistent=False)
 
         # Initialize weights and apply final processing
