@@ -13,15 +13,15 @@ VAL_DATA_URL = 'JeanKaddour/minipile'
 
 TRAIN_INIT_CONFIG = {
     "lr": 3e-6,
-    "eval_freq": 10,
-    "save_freq": 10,
+    "eval_freq": 1000,
+    "save_freq": 10000,
     "kl_limit": 256,
     "kl_penalty": 1.0
 }
 
 TRAIN_RUN_CONFIG = {
-    "num_steps": 15,
-    "warmup_steps": 5000, # 5000
+    "num_steps": 500000,
+    "warmup_steps": 10000, # 5000
     "batch_size": 16,
     "seed": 0
 }
