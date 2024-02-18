@@ -12,7 +12,7 @@ TRAIN_DATA_URL = 'EleutherAI/the_pile_deduplicated'
 VAL_DATA_URL = 'JeanKaddour/minipile'
 
 TRAIN_INIT_CONFIG = {
-    "lr": 3e-6,
+    "lr": 1e-5,
     "eval_freq": 1000,
     "save_freq": 10000,
     "kl_limit": 256,
