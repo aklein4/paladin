@@ -81,6 +81,8 @@ class PaladinModel(PreTrainedModel):
         # Initialize weights and apply final processing
         self.post_init()
 
+        self.cache_enabled = False
+
 
     def sample_z_for_training(
         self, mus, sigmas, mode,
@@ -194,12 +196,24 @@ class PaladinModel(PreTrainedModel):
 
 
     @staticmethod
-    def from_pretrained_wrapper(*args, **kwargs):
-        debug = kwargs.pop("debug", False)
+    def from_pretrained_compile(*args, **kwargs):
+        out = PaladinModel.from_pretrained(*args, **kwargs).to(constants.DEVICE).to(constants.DTYPE)
 
-        out = PaladinModel.from_pretrained(*args, **kwargs).to(DEVICE).to(DTYPE)
-
-        if not debug:
-            _ = torch.compile(out, mode="reduce-overhead", fullgraph=True)
+        _ = torch.compile(out, mode="reduce-overhead", fullgraph=True)
 
         return out
+    
+
+    def enable_cache(self):
+        self.cache_enabled = True
+        for m in [self.encoder, self.memory, self.decoder]:
+            m.enable_cache()
+
+    def disable_cache(self):
+        self.cache_enabled = False
+        for m in [self.encoder, self.memory, self.decoder]:
+            m.disable_cache()
+
+    def reset_cache(self):
+        for m in [self.encoder, self.memory, self.decoder]:
+            m.reset_cache()

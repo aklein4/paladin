@@ -28,6 +28,22 @@ class BaseBlock(nn.Module):
         self.ln_2 = nn.LayerNorm(self.hidden_size, eps=config.layer_norm_epsilon)
         self.mlp = GPT2MLP(self.inner_dim, config)
 
+        self.cache_enabled = False
+        self.cache = None
+
+
+    def _cached_attn(
+        self, x, memory
+    ):
+        memory = memory[:, -1:]
+
+        return self.attn(
+            self.ln_1(x),
+            encoder_hidden_states=self.ln_mem(memory),
+            use_cache=self.cache_enabled,
+            layer_past=self.cache
+        )[:2]
+
 
     def forward(
         self,
@@ -39,11 +55,17 @@ class BaseBlock(nn.Module):
             memory = x
 
         # (self) cross attention
-        x_attn = self.attn(
-            self.ln_1(x),
-            encoder_hidden_states=self.ln_mem(memory),
-            encoder_attention_mask=gpt2_causal_mask(memory, self.attn.num_heads)
-        )[0] # output_attn: a, present, (attentions)
+        if self.cache_enabled and self.cache is not None:
+            x_attn, cache_attn = self._cached_attn(x, memory)
+        else:
+            x_attn, cache_attn = self.attn(
+                self.ln_1(x),
+                encoder_hidden_states=self.ln_mem(memory),
+                encoder_attention_mask=gpt2_causal_mask(x, self.attn.num_heads),
+                use_cache=self.cache_enabled,
+            )[:2]
+        if self.cache_enabled:
+            self.cache = cache_attn
         x = x + x_attn
 
         # child extras
@@ -82,6 +104,18 @@ class BaseBlock(nn.Module):
         self.ln_mem.bias.data = block.ln_1.bias.data.clone()
 
 
+    def enable_cache(self):
+        self.cache_enabled = True
+        self.cache = None
+    
+    def disable_cache(self):
+        self.cache_enabled = False
+        self.cache = None
+
+    def reset_cache(self):
+        self.cache = None
+
+
 class BaseModel(PreTrainedModel):
     _block_module = BaseBlock
 
@@ -99,6 +133,8 @@ class BaseModel(PreTrainedModel):
 
         # Initialize weights and apply final processing
         self.post_init()
+
+        self.cache_enabled = False
 
 
     def pre_forward(
@@ -170,3 +206,18 @@ class BaseModel(PreTrainedModel):
         with torch.no_grad():
             for i in range(len(self.h)):
                 self.h[i].load_gpt2_extras(gpt2.h[i])
+
+
+    def enable_cache(self):
+        self.cache_enabled = True
+        for block in self.h:
+            block.enable_cache()
+
+    def disable_cache(self):
+        self.cache_enabled = False
+        for block in self.h:
+            block.disable_cache()
+
+    def reset_cache(self):
+        for block in self.h:
+            block.reset_cache()
