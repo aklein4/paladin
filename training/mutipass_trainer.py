@@ -116,7 +116,7 @@ class MultiPassTrainer(BaseTrainer):
         ).to(constants.DEVICE)
 
         # hack to fix the padding token
-        x = torch.clip(x, max=len(tokenizer)-1)
+        x.input_ids = torch.clip(x.input_ids, max=len(tokenizer)-1)
 
         x.padding_mask = x.attention_mask == 0
 
