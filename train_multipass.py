@@ -48,7 +48,7 @@ def main():
     for k, v in MODEL_CONFIG.items():
         setattr(config, k, v)
     encoder = MultiPassEncoder(config)
-    encoder.transformer.load_state_dict({k: v.clone() for k, v in gpt.transformer.state_dict().items()})
+    encoder.transformer.load_state_dict(gpt.transformer.state_dict())
 
     gpt = GPT2LMHeadModel.from_pretrained(DECODER_URL)
     config = gpt.config

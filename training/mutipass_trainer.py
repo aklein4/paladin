@@ -115,6 +115,9 @@ class MultiPassTrainer(BaseTrainer):
             max_length=self.max_length
         ).to(constants.DEVICE)
 
+        # hack to fix the padding token
+        x = torch.clip(x, max=len(tokenizer)-1)
+
         x.padding_mask = x.attention_mask == 0
 
         return x
