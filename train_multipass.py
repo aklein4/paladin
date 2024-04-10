@@ -17,9 +17,10 @@ DECODER_URL = "openai-community/gpt2"
 TRAIN_DATA_URL = 'JeanKaddour/minipile' # 'EleutherAI/the_pile_deduplicated'
 VAL_DATA_URL = 'JeanKaddour/minipile'
 
+NAME = "multipass-alpha"
 
 TRAIN_CONFIG = {
-    "lr": 1e-5,
+    "lr": 3e-5,
     "bs": 8,
     "num_steps": 25000,
     "warmup_steps": 1000,
@@ -28,13 +29,13 @@ TRAIN_CONFIG = {
     "dtype": torch.bfloat16,
     "max_length": 1024,
     "memory_grad": False,
-    "max_eval_examples": 100
+    "max_eval_examples": 500
 }
 
 
 MODEL_CONFIG = {
     "z_dim": 8,
-    "t_dim": 32,
+    "t_dim": 64,
 }
 
 
@@ -68,12 +69,12 @@ def main():
     _ = torch.compile(decoder, mode="reduce-overhead", fullgraph=True)
 
     print("Loading data...")
-    train_loader = SingleLoader(TRAIN_DATA_URL, train=False, debug=True)
-    val_loader = FullLoader(VAL_DATA_URL, train=False, debug=True)
+    train_loader = SingleLoader(TRAIN_DATA_URL, train=True, debug=False)
+    val_loader = FullLoader(VAL_DATA_URL, train=False, debug=False)
 
-    print("Training!")
+    print("Train!")
     trainer = MultiPassTrainer(
-        "multipass-test",
+        NAME,
         **TRAIN_CONFIG
     )
     trainer.train(

@@ -248,7 +248,6 @@ class MAGEModel(PreTrainedModel):
 
         # calculate memory
         if memory is None:
-            print(self.memory_grad)
             with torch.set_grad_enabled(self.memory_grad):
                 m = x
                 memory = [m]
