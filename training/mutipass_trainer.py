@@ -70,6 +70,10 @@ class MultiPassTrainer(BaseTrainer):
         for k, v in self.log.eval.items():
             for t, w in v.items():
                 out_log[f"eval_{k}_{t:.2f}"] = w
+
+        max_len = max([len(v) for v in out_log.values()])
+        for k, v in out_log.items():
+            out_log[k] = v + [None] * (max_len - len(v))
         df = pd.DataFrame(out_log)
         df.to_csv(self._log_file)
 
@@ -188,6 +192,7 @@ class MultiPassTrainer(BaseTrainer):
 
                 pbar.set_postfix({str(k): np.mean(v) for k, v in tmp_log.acc.items()})
                 pbar.update(self.bs)
+                break
 
         # save metrics
         for m in self._metrics:
