@@ -48,7 +48,7 @@ class BaseTrainer:
     for file in list(files) + [self._hyper_file]:
         api.upload_file(
             path_or_fileobj=file,
-            path_in_repo=file,
+            path_in_repo=str(file).split("/")[-1],
             repo_id=self.save_repo,
             repo_type="model"
         )
