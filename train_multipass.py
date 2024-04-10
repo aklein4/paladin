@@ -14,7 +14,7 @@ import constants as constants
 ENCODER_URL = "distilbert/distilgpt2"
 DECODER_URL = "distilbert/distilgpt2"
 
-TRAIN_DATA_URL = 'EleutherAI/the_pile_deduplicated'
+TRAIN_DATA_URL = 'JeanKaddour/minipile' # 'EleutherAI/the_pile_deduplicated'
 VAL_DATA_URL = 'JeanKaddour/minipile'
 
 
@@ -61,7 +61,7 @@ def main():
     decoder = decoder.to(constants.DEVICE)
 
     print("Loading data...")
-    train_loader = SingleLoader(TRAIN_DATA_URL, train=True, debug=True)
+    train_loader = SingleLoader(TRAIN_DATA_URL, train=False, debug=True)
     val_loader = FullLoader(VAL_DATA_URL, train=False, debug=True)
 
     print("Training!")
