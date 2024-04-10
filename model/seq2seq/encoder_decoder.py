@@ -5,16 +5,15 @@ import torch.nn.functional as F
 from transformers import PreTrainedModel
 from transformers.models.gpt2.modeling_gpt2 import GPT2Attention, GPT2MLP
 
-from model.model_utils import get_gpt2_causal_mask
+from model.model_utils import get_gpt2_padding_mask
 from utils import DotDict
 
 
-class BaseBlock(nn.Module):
+class EncoderBlock(nn.Module):
     """
-    Transformer block based on gpt2.
-     - Uses cross-attention instead of cross-attention.
-     - Adds capabtility for child classes to add extra layers 
-       between the attention and the feedforward layer.
+    Encoder block based on gpt2.
+     - Uses noncausal self-attention.
+     - Handles paddding masks.
     """
 
     def __init__(self, config, layer_idx=None):
@@ -23,12 +22,11 @@ class BaseBlock(nn.Module):
         self.hidden_size = config.hidden_size
         self.inner_dim = config.n_inner if config.n_inner is not None else 4 * self.hidden_size
 
-        # attn layer
+        # self attn layer
         self.ln_1 = nn.LayerNorm(self.hidden_size, eps=config.layer_norm_epsilon)
-        self.ln_mem = nn.LayerNorm(self.hidden_size, eps=config.layer_norm_epsilon)
         self.attn = GPT2Attention(
             config, layer_idx=layer_idx,
-            is_cross_attention=True
+            is_cross_attention=False
         )
 
         # ff layer
@@ -39,84 +37,47 @@ class BaseBlock(nn.Module):
     def forward(
         self,
         x: torch.Tensor,
-        memory: torch.Tensor=None,
-        **kwargs
+        padding_mask=None,
     ) -> torch.Tensor:
-        """ Forward pass of the block with cross-attention.
-         - x and memory should be the same size.
-         - if memory is not passed, it defaults to x (self-attention).
+        """ Forward pass of the block with self-attention.
+         - padding mask should be bool tensor with same shape as x (True where padding)
+         - if padding mask is not passed, it defaults to no padding
 
         Args:
             x (torch.Tensor): Input tensor [B, S, D]
-            memory (torch.Tensor, optional): Memory tensor [B, S, D]. Defaults to x.
-            kwargs: Extra arguments to be passed to subforward.
+            paddding_mask (torch.Tensor, optional): Padding tensor [B, S, D]. Defaults to None.
 
         Returns:
             torch.Tensor: Output tensor [B, S, D]
         """
-        if memory is None:
-            memory = x
+        if padding_mask is None:
+            padding_mask = torch.zeros_like(x).bool()
 
-        # cross (self) attn layer
+        # self attn layer
+        mask = get_gpt2_padding_mask(x, x, padding_mask, self.attn.num_heads)
         x_attn = self.attn(
             self.ln_1(x),
-            encoder_hidden_states=self.ln_mem(memory),
-            encoder_attention_mask=get_gpt2_causal_mask(x, self.attn.num_heads),
+            encoder_attention_mask=mask,
         )[0]
         x = x + x_attn
 
-        # child extras
-        x = self.subforward(x, **kwargs)
-
         # ff layer
-        if not self._disable_ff:
-            x_ff = self.mlp(
-                self.ln_2(x)
-            )
-            x = x + x_ff
+        x_ff = self.mlp(
+            self.ln_2(x)
+        )
+        x = x + x_ff
 
         return x
 
 
-    # to be overwridden by subclasses
-    def subforward(
-        self,
-        x: torch.Tensor,
-        **kwargs
-    ) -> torch.Tensor:
-        return x
-    
-
-    @torch.no_grad()
-    def load_gpt2_extras(self, block):
-        """ Load the weights of a gpt2 block that cannot simply be loaded with load_state_dict.
-
-        Args:
-            block: GPT2Block to load from.
-        """
-
-        # copy the attention matrices
-        self.attn.q_attn.weight.data = block.attn.c_attn.weight[:, :block.attn.embed_dim].data.clone()
-        self.attn.q_attn.bias.data = block.attn.c_attn.bias[:block.attn.embed_dim].data.clone()
-        
-        self.attn.c_attn.weight.data = block.attn.c_attn.weight[:, block.attn.embed_dim:].data.clone()
-        self.attn.c_attn.bias.data = block.attn.c_attn.bias[block.attn.embed_dim:].data.clone()
-
-        # copy the normalizations
-        self.ln_mem.weight.data = block.ln_1.weight.data.clone()
-        self.ln_mem.bias.data = block.ln_1.bias.data.clone()
-
-
-class BaseModel(PreTrainedModel):
-    """ Transformer model based on gpt2.
-     - Uses BaseBlock instead of GPT2Block.
+class MAGEModel(PreTrainedModel):
+    """ MAGE model based on gpt2.
+     - Uses MAGEBlock instead of GPT2Block.
      - Can be easily modified to use different block types.
-     - Supports causal and non-causal attention.
-     - supports a CLS pooling token
     """
 
     # change this to the desired block type
-    _block_module = BaseBlock
+    _block_module = MAGEBlock
 
     def __init__(self, config):
         super().__init__(config)

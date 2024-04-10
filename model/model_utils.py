@@ -3,7 +3,7 @@ import torch
 import math
 
 
-def get_gpt2_causal_mask(x, num_heads, causal=True):
+def get_gpt2_causal_mask(x, num_heads):
     mask = torch.ones(
         x.shape[0],
         num_heads,
@@ -13,7 +13,25 @@ def get_gpt2_causal_mask(x, num_heads, causal=True):
         dtype=x.dtype
     )
 
-    mask = torch.triu(mask, diagonal=1) * torch.finfo(mask.dtype).min
+    return torch.triu(mask, diagonal=1) * torch.finfo(mask.dtype).min
+
+
+def get_gpt2_padding_mask(tgt, mem, padding_mask, num_heads):
+    mask = torch.ones(
+        tgt.shape[0],
+        num_heads,
+        tgt.shape[1],
+        mem.shape[1],
+        device=tgt.device,
+        dtype=tgt.dtype
+    )
+
+    # one where there is padding, with extra dim for heads and tgt_len
+    padding_mask = padding_mask[:, None, None, :].to(mask.dtype).to(mask.device)
+
+    # -inf where there is padding
+    mask = mask * padding_mask * torch.finfo(mask.dtype).min
+
     return mask
 
 
@@ -23,7 +41,7 @@ def get_timestep_embedding(
     flip_sin_to_cos: bool = False,
     downscale_freq_shift: float = 1,
     scale: float = 1,
-    max_period: int = 10000,
+    max_period: int = 1,
 ):
     """
     This matches the implementation in Denoising Diffusion Probabilistic Models: Create sinusoidal timestep embeddings.
