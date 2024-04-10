@@ -24,6 +24,7 @@ def lm_metrics(input_ids, logits, padding_mask=None):
     ).reshape(logits.shape[0], logits.shape[1])
 
     # apply the padding mask
+    masked_logits = logits.reshape(-1, logits.shape[-1])[~padding_mask.reshape(-1)]
     masked_logp = logp.reshape(-1)[~padding_mask.reshape(-1)]
     masked_input_ids = input_ids.reshape(-1)[~padding_mask.reshape(-1)]
 
@@ -42,7 +43,7 @@ def lm_metrics(input_ids, logits, padding_mask=None):
 
     # accuracy is the percentage of correct tokens
     acc = (
-        torch.argmax(masked_logp, dim=-1) ==
+        torch.argmax(masked_logits, dim=-1) ==
         masked_input_ids
     ).float().mean()
 

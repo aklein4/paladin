@@ -119,11 +119,11 @@ class MultiPassDecoder(PreTrainedModel):
         self.requires_grad_(True)
         self.transformer.wte.requires_grad_(False)
         self.transformer.wpe.requires_grad_(False)
+        self.lm_head.requires_grad_(False)
         if not memory_grad:
             self.transformer.h.requires_grad_(False)
 
-        p = list(self.transformer.parameters())
-        p += list(self.transformer.h_agent.parameters())
+        p = list(self.transformer.h_agent.parameters())
         p += list(self.transformer.ln_f.parameters())
         if memory_grad:
             p += list(self.transformer.h.parameters())
