@@ -27,7 +27,7 @@ TRAIN_CONFIG = {
     "checkpoint_freq": 5000,
     "dtype": torch.bfloat16,
     "max_length": 1024,
-    "memory_grad": True,
+    "memory_grad": False,
     "max_eval_examples": 100
 }
 
