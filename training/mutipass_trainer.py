@@ -110,10 +110,12 @@ class MultiPassTrainer(BaseTrainer):
         x = tokenizer(
             prompts,
             return_tensors="pt",
-            padding=True,
-            truncation=True,
+            padding='max_length',
+            truncation='longest_first'
             max_length=self.max_length
         ).to(constants.DEVICE)
+
+        x.padding_mask = x.attention_mask == 0
 
         return x
 
