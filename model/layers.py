@@ -114,6 +114,38 @@ class MAGEMLP(nn.Module):
         self.c_fc.weight.data[self.embed_dim:] = n
 
 
+class ConditionGate(nn.Module):
+
+    def __init__(self, hidden_size, cond_size, inter_size, config):
+        super().__init__()
+
+        self.hidden_size = hidden_size
+        self.cond_size = cond_size
+        self.inter_size = inter_size
+
+        self.q_proj = nn.Linear(hidden_size, inter_size)
+        self.k_proj = nn.Linear(cond_size, inter_size)
+        
+        self.out_proj = nn.Linear(inter_size, hidden_size, bias=False)
+        self.out_proj.weight.data.zero_()
+
+        self.act = ACT2FN[config.activation_function]
+        self.dropout = nn.Dropout(config.resid_pdrop)
+
+
+    def forward(self, x, cond):
+        q = self.q_proj(x)
+        k = self.k_proj(cond)
+
+        attn = self.act(q)
+        v = attn * k
+
+        out = self.out_proj(v)
+        out = self.dropout(out)
+
+        return out
+
+
 class OneXAttention(nn.Module):
     
     def __init__(self, hidden_size, other_size, config):

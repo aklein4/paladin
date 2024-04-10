@@ -5,9 +5,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from transformers import PreTrainedModel
-from transformers.models.gpt2.modeling_gpt2 import GPT2Block, GPT2Attention
+from transformers.models.gpt2.modeling_gpt2 import GPT2Block, GPT2Attention, GPT2MLP
 
-from model.layers import MAGEMLP
 from model.model_utils import get_gpt2_causal_mask
 from utils import DotDict
 
@@ -17,18 +16,9 @@ class MAGEBlock(nn.Module):
     MAGE block based on gpt2.
      - Uses cross-attention instead of self-attention.
         - KEY IDEA: if the tensor we cross-attend to is the same as the input, we get self-attention!
-     - Can add extra sequence-independent inputs in subclasses.
+     - Can add extra inputs in subclasses.
      - attention is always causal.
     """
-
-    def get_extra_dim(self, config):
-        # used to determine the extra dim for the mlp
-        return 0
-    
-    def init_subclass_modules(self, config):
-        # used to initialize extra modules in subclasses
-        pass
-
 
     def __init__(self, config, layer_idx=None):
         super().__init__()
@@ -36,7 +26,6 @@ class MAGEBlock(nn.Module):
 
         self.hidden_size = config.hidden_size
         self.inner_dim = config.n_inner if config.n_inner is not None else 4 * self.hidden_size
-        self.extra_dim = self.get_extra_dim(config)
 
         # attn layer
         self.ln_1 = nn.LayerNorm(self.hidden_size, eps=config.layer_norm_epsilon)
@@ -48,29 +37,31 @@ class MAGEBlock(nn.Module):
 
         # ff layer
         self.ln_2 = nn.LayerNorm(self.hidden_size, eps=config.layer_norm_epsilon)
-        self.mlp = MAGEMLP(self.inner_dim, self.extra_dim, config)
+        self.mlp = GPT2MLP(self.inner_dim, config)
 
         # initialize extra modules
         self.init_subclass_modules(config)
-        
+    
+
+    def init_subclass_modules(self, config):
+        # used to initialize extra modules in subclasses
+        pass
+
 
     def forward(
         self,
         x: torch.Tensor,
         memory: torch.Tensor,
-        proj_extras: Optional[List[torch.Tensor]]=[],
-        emb_extras: Optional[List[torch.Tensor]]=[]
+        **kwargs
     ) -> torch.Tensor:
         """ Forward pass of the block with.
          - x and memory should be the same size.
-         - extras can be used to pass extra inputs to the block.
-         - subforward is called between attention and ff layers to modify x and extras.
+         - kwargs are passed to subforward between attention and ff layer.
 
         Args:
             x (torch.Tensor): Input tensor [B, S, D]
             memory (torch.Tensor): Memory tensor [B, S, D]
-            proj_extras (List[torch.Tensor], optional): List of extra inputs [B, S, <D>] projected into the ff layer. Defaults to [].
-            emb_extras (List[torch.Tensor], optional): List of extra inputs [B, S, D] embedded into the ff layer. Defaults to [].
+            kwargs: Extra inputs passed to subforward.
 
         Returns:
             torch.Tensor: Output tensor [B, S, D]
@@ -85,13 +76,11 @@ class MAGEBlock(nn.Module):
         x = x + x_attn
 
         # extra handling
-        x, proj_extras, emb_extras = self.subforward(x, proj_extras, emb_extras)
+        x = self.subforward(x, **kwargs)
 
         # ff layer
         x_ff = self.mlp(
             self.ln_2(x),
-            proj_extras,
-            emb_extras
         )
         x = x + x_ff
 
@@ -102,21 +91,20 @@ class MAGEBlock(nn.Module):
     def subforward(
         self,
         x: torch.Tensor,
-        proj_extras: List[torch.Tensor],
-        emb_extras: List[torch.Tensor]
+        **kwargs
     ) -> torch.Tensor:
         """ Subforward pass of the block.
-         - Can be used to modify x and extras before the ff layer.
+         - Can be used to modify x between the attention and ff layer.
+         - kwargs are passed from forward.
 
         Args:
             x (torch.Tensor): Input tensor [B, S, D].
-            proj_extras (List[torch.Tensor]): List of extra inputs [B, S, <D>] projected into the ff layer.
-            emb_extras (List[torch.Tensor]): List of extra inputs [B, S, D] embedded into the ff layer.
+            kwargs: Extra inputs passed from forward.
 
         Returns:
             torch.Tensor: Modified x.
         """
-        return x, proj_extras, emb_extras
+        return x
     
 
     @torch.no_grad()
@@ -145,20 +133,7 @@ class MAGEBlock(nn.Module):
         self.attn.c_attn.bias.data = block.attn.c_attn.bias[block.attn.embed_dim:].data.clone()
 
         # copy the mlp
-        self.mlp.load_gpt2(block.mlp)
-
-
-    @torch.no_grad()
-    def init_control(
-        self,
-        scales: torch.FloatTensor
-    ):
-        """ Initialize the control parameters of the ff module.
-
-        Args:
-            scales (torch.FloatTensor): Scales for the control parameters [extra_dim]
-        """
-        self.mlp.init_control(scales)
+        self.mlp.load_state_dict(block.mlp.state_dict())
 
 
 class MAGEModel(PreTrainedModel):
@@ -240,19 +215,17 @@ class MAGEModel(PreTrainedModel):
         self,
         input_ids: torch.LongTensor,
         memory: Optional[torch.Tensor]=None,
-        proj_extras: Optional[List[torch.Tensor]]=[],
-        emb_extras: Optional[List[torch.Tensor]]=[],
+        **kwargs
     ) -> torch.Tensor:
         """ Forward pass of the model.
          - Accumulates memory, then uses agent to get output.
-         - Can pass extra inputs to the agent.
+         - Can pass extra kwargs to the agent blocks.
          - Can take precomputed memory.
 
         Args:
             input_ids (torch.LongTensor): Token ids [B, S].
             memory (torch.Tensor, optional): Pre-computed memory [B, S, D]. Defaults to None.
-            proj_extras (List[torch.Tensor], optional): List of extra inputs [B, S, <D>] projected into the ff layer. Defaults to [].
-            emb_extras (List[torch.Tensor], optional): List of extra inputs [B, S, D] embedded into the ff layer. Defaults to [].
+            kwargs: Extra inputs passed to the agent blocks.
 
         Returns:
             DotDict: Output tensor [B, S, D], memory tensor [L, B, S, D].
@@ -276,8 +249,7 @@ class MAGEModel(PreTrainedModel):
             x = block(
                 x,
                 memory[i],
-                proj_extras,
-                emb_extras
+                **kwargs
             )
 
         # post process
@@ -312,17 +284,3 @@ class MAGEModel(PreTrainedModel):
         # custom blocks
         for i in range(len(self.h_agent)):
             self.h_agent[i].load_gpt2(gpt2.h[i])
-
-
-    @torch.no_grad()
-    def init_control(
-        self,
-        scales: torch.FloatTensor
-    ):
-        """ Initialize the control parameters of the ff module.
-
-        Args:
-            scales (torch.FloatTensor): Scales for the control parameters [extra_dim]
-        """
-        for block in self.h_agent:
-            block.init_control(scales)
