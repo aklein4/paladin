@@ -41,7 +41,7 @@ def main():
     
     print("Loading models...")
     tokenizer = GPT2TokenizerFast.from_pretrained(ENCODER_URL)
-    tokenizer.pad_token = 0
+    tokenizer.add_special_tokens({"pad_token": "[PAD]"})
 
     gpt = GPT2Model.from_pretrained(ENCODER_URL)
     config = gpt.config
