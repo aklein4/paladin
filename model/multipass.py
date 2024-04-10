@@ -131,6 +131,7 @@ class MultiPassDecoder(PreTrainedModel):
         return p
     
 
+    @torch.no_grad()
     def load_gpt2(self, gpt2):
         self.transformer.load_gpt2(gpt2.transformer)
         self.lm_head.load_state_dict(gpt2.lm_head.state_dict())

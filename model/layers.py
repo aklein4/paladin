@@ -75,6 +75,7 @@ class MAGEMLP(nn.Module):
         return h
 
 
+    @torch.no_grad()
     def load_gpt2(
         self,
         gpt2: nn.Module
@@ -92,7 +93,7 @@ class MAGEMLP(nn.Module):
 
         # initial conv needs zero padding
         self.c_fc.bias = gpt2.c_fc.bias
-        self.c_fc.weight.data.zero_()
+        self.c_fc.weight.data.normal_(std=0.02)
         self.c_fc.weight.data[:self.embed_dim] = gpt2.c_fc.weight.data.clone()
 
 

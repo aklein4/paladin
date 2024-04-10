@@ -26,7 +26,7 @@ TRAIN_CONFIG = {
     "warmup_steps": 100,
     "eval_freq": 250,
     "checkpoint_freq": 5000,
-    "dtype": torch.float32,
+    "dtype": torch.bfloat16,
     "max_length": 1024,
     "memory_grad": False,
     "max_eval_examples": 100
