@@ -89,6 +89,7 @@ class MultiPassDecoder(PreTrainedModel):
         super().__init__(config)
     
         self.transformer = MultiPassModel(config)
+        self.lm_head = nn.Linear(config.n_embd, config.vocab_size, bias=False)
 
 
     def forward(self, input_ids, z, t, memory=None):
@@ -128,3 +129,8 @@ class MultiPassDecoder(PreTrainedModel):
             p += list(self.transformer.h.parameters())
 
         return p
+    
+
+    def load_gpt2(self, gpt2):
+        self.transformer.load_gpt2(gpt2.transformer)
+        self.lm_head.load_state_dict(gpt2.lm_head.state_dict())

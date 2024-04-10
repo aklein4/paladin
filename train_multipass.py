@@ -1,6 +1,6 @@
 import torch
 
-from transformers import GPT2Model, GPT2TokenizerFast
+from transformers import GPT2LMHeadModel, GPT2TokenizerFast
 
 from loader.single_loader import SingleLoader
 from loader.full_loader import FullLoader
@@ -43,19 +43,22 @@ def main():
     tokenizer = GPT2TokenizerFast.from_pretrained(ENCODER_URL)
     tokenizer.add_special_tokens({"pad_token": "[PAD]"})
 
-    gpt = GPT2Model.from_pretrained(ENCODER_URL)
+    gpt = GPT2LMHeadModel.from_pretrained(ENCODER_URL)
     config = gpt.config
     for k, v in MODEL_CONFIG.items():
         setattr(config, k, v)
     encoder = MultiPassEncoder(config)
-    encoder.transformer.load_state_dict({k: v.clone() for k, v in gpt.state_dict().items()})
+    encoder.transformer.load_state_dict({k: v.clone() for k, v in gpt.transformer.state_dict().items()})
 
-    gpt = GPT2Model.from_pretrained(DECODER_URL)
+    gpt = GPT2LMHeadModel.from_pretrained(DECODER_URL)
     config = gpt.config
     for k, v in MODEL_CONFIG.items():
         setattr(config, k, v)
     decoder = MultiPassDecoder(config)
-    decoder.transformer.load_gpt2(gpt)
+    decoder.load_gpt2(gpt)
+
+    encoder.load_state_dict({k: v.clone() for k, v in gpt.state_dict().items()})
+    decoder.load_state_dict({k: v.clone() for k, v in gpt.state_dict().items()})
 
     encoder = encoder.to(constants.DEVICE)
     decoder = decoder.to(constants.DEVICE)
