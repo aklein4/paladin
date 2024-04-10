@@ -1,6 +1,4 @@
 
-from abc import abstractclassmethod
-
 
 class BaseLoader:
 
@@ -12,16 +10,13 @@ class BaseLoader:
         self.debug = debug
 
 
-    @abstractclassmethod
     def reset(self):
         raise NotImplementedError
     
 
-    @abstractclassmethod
     def __len__(self):
         raise NotImplementedError
     
 
-    @abstractclassmethod
-    def __call__(self, batchsize, length=None, tokenizer=None):
+    def __call__(self, batchsize):
         raise NotImplementedError

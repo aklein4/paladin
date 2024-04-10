@@ -23,10 +23,7 @@ class FullLoader(BaseLoader):
 
         data = []
 
-        for file in (
-            tqdm(self.parquets, desc="Loading") if not debug else
-            os.listdir(self.parquets)
-        ):
+        for file in tqdm(self.parquets, desc="Loading", disable=debug):
 
             df = pd.read_parquet(f"hf://datasets/{self.url}/{file}")
             data.append(np.array(df["text"]))
@@ -49,24 +46,17 @@ class FullLoader(BaseLoader):
         return len(self.data)
 
 
-    def __call__(self, batchsize, length=None, tokenizer=None):
-        assert (length is None) == (tokenizer is None)
+    def __call__(self, batchsize):
 
         out = []
         while len(out) < batchsize:
-            x = self.data[self.curr_ind]
 
+            out.append(self.data[self.curr_ind])
             self.curr_ind += 1
+            
             if self.curr_ind >= len(self.data):
                 self.curr_ind = 0
                 self.done = True
-
-            if length is not None:
-                check = tokenizer([x], return_tensors="pt").input_ids.shape[1]
-                if check < length:
-                    continue
-
-            out.append(x)
 
         return out
     

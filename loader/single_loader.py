@@ -3,8 +3,6 @@ import huggingface_hub as hf
 
 import numpy as np
 import pandas as pd
-import os
-from tqdm import tqdm
 
 from loader.base_loader import BaseLoader
 
@@ -47,13 +45,12 @@ class SingleLoader(BaseLoader):
         return len(self.data)
 
 
-    def __call__(self, batchsize, length=None, tokenizer=None):
-        assert (length is None) == (tokenizer is None)
+    def __call__(self, batchsize):
 
         out = []
         while len(out) < batchsize:
-            x = self.data[self.curr_ind]
 
+            out.append(self.data[self.curr_ind])
             self.curr_ind += 1
 
             if self.curr_ind >= len(self.data):
@@ -65,13 +62,6 @@ class SingleLoader(BaseLoader):
                     self.done = True
 
                 self.load_file(self.curr_file_ind)
-
-            if length is not None:
-                check = tokenizer([x], return_tensors="pt").input_ids.shape[1]
-                if check < length:
-                    continue
-
-            out.append(x)
 
         return out
     
