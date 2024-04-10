@@ -290,7 +290,7 @@ class MultiPassTrainer(BaseTrainer):
                     self.evaluate(tokenizer, encoder, decoder, val_loader)
                     self.upload()
 
-                if (step+1) % self.eval_freq == 0 or step == self.num_steps-1:
+                if (step+1) % self.checkpoint_freq == 0 or step == self.num_steps-1:
                     self.save_checkpoint(
                         {
                             "encoder": encoder,
