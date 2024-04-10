@@ -111,7 +111,7 @@ class MultiPassTrainer(BaseTrainer):
             prompts,
             return_tensors="pt",
             padding='max_length',
-            truncation='longest_first'
+            truncation='longest_first',
             max_length=self.max_length
         ).to(constants.DEVICE)
 

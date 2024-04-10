@@ -299,3 +299,7 @@ class MAGEModel(PreTrainedModel):
         # custom blocks
         for i in range(len(self.h_agent)):
             self.h_agent[i].load_gpt2(gpt2.h[i])
+        
+        # make sure that everything is a clone
+        state = {k: v.clone() for k, v in self.state_dict().items()}
+        self.load_state_dict(state)
