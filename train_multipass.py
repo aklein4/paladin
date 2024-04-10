@@ -20,7 +20,7 @@ VAL_DATA_URL = 'JeanKaddour/minipile'
 
 TRAIN_CONFIG = {
     "lr": 1e-5,
-    "bs": 12,
+    "bs": 8,
     "num_steps": 10000,
     "warmup_steps": 1000,
     "eval_freq": 1000,
