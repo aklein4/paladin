@@ -114,12 +114,14 @@ class MultiPassTrainer(BaseTrainer):
             truncation='longest_first',
             max_length=self.max_length
         ).to(constants.DEVICE)
+        x.padding_mask = x.attention_mask == 0
 
         # hack to fix the padding token
-        x.input_ids = torch.clip(x.input_ids, max=len(tokenizer)-1)
-
-        x.padding_mask = x.attention_mask == 0
-        print(torch.sum(x.padding_mask.long()).item())
+        x.input_ids = torch.where(
+            x.padding_mask,
+            torch.zeros_like(x.input_ids),
+            x.input_ids
+        )
 
         return x
 
