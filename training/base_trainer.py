@@ -45,7 +45,7 @@ class BaseTrainer:
         default_flow_style=False
       )
 
-    for file in files + [self._hyper_file]:
+    for file in list(files) + [self._hyper_file]:
         api.upload_file(
             path_or_fileobj=file,
             path_in_repo=file,
