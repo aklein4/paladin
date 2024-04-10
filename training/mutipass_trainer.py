@@ -180,6 +180,7 @@ class MultiPassTrainer(BaseTrainer):
                     for m in self._metrics:
                         tmp_log[m][t].append(metrics[m].item())
 
+                print(tmp_log.acc)
                 pbar.set_postfix({k: np.mean(v) for k, v in tmp_log.acc.items()})
                 pbar.update(self.bs)
 
