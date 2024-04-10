@@ -35,7 +35,9 @@ class MultiPassTrainer(BaseTrainer):
     ]
 
     _metrics = ["loss", "bpb", "ppl", "acc"]
+
     _eval_t = [0.0, 0.25, 0.5, 0.75, 1.0]
+    _eval_t_colors = ["blue", "cyan", "green", "orange", "gray"]
 
     def __init__(
         self,
@@ -92,8 +94,8 @@ class MultiPassTrainer(BaseTrainer):
 
         # plot eval metrics
         for i, metric in enumerate(self._metrics):
-            for t in self._eval_t:
-                ax[1,i].plot(self.log.eval[metric][t], label=f"{t:.2f}")
+            for j, t in enumerate(self._eval_t):
+                ax[1,i].plot(self.log.eval[metric][t], label=f"{t:.2f}", color=self._eval_t_colors[j])
             
             ax[1,i].legend()
             ax[1,i].set_title(f"Eval {metric.upper()}")
@@ -255,7 +257,7 @@ class MultiPassTrainer(BaseTrainer):
                     z = encoder(x.input_ids)
 
                     # get noised encoding
-                    t = 0 * torch.rand(z.shape[:-1], device=constants.DEVICE, generator=generator)
+                    t = torch.rand(z.shape[:-1], device=constants.DEVICE, generator=generator)
                     noise = torch.randn(z.shape, device=constants.DEVICE, generator=generator)
                     z_noisy = add_noise(z, t, noise)
 

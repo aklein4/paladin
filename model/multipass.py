@@ -64,8 +64,9 @@ class MultiPassEncoder(PreTrainedModel):
         ).last_hidden_state
 
         z = self.z_head(out)
-        z = z - z.mean(dim=-1, keepdim=True)
-        z = z / z.std(dim=-1, keepdim=True)
+
+        # constant kl with unit gaussian for given t
+        z = z / z.norm(dim=-1, keepdim=True)
 
         # shift z to the left
         z_out = torch.zeros_like(z)

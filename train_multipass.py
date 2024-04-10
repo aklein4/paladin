@@ -17,19 +17,19 @@ DECODER_URL = "openai-community/gpt2"
 TRAIN_DATA_URL = 'JeanKaddour/minipile' # 'EleutherAI/the_pile_deduplicated'
 VAL_DATA_URL = 'JeanKaddour/minipile'
 
-NAME = "multipass-test"
+NAME = "multipass-beta"
 
 TRAIN_CONFIG = {
     "lr": 3e-5,
     "bs": 8,
-    "num_steps": 25000,
-    "warmup_steps": 100,
-    "eval_freq": 250,
+    "num_steps": 20000,
+    "warmup_steps": 1000,
+    "eval_freq": 1000,
     "checkpoint_freq": 5000,
     "dtype": torch.bfloat16,
     "max_length": 1024,
     "memory_grad": False,
-    "max_eval_examples": 100
+    "max_eval_examples": 500
 }
 
 
@@ -64,6 +64,7 @@ def main():
     decoder = MultiPassDecoder(config)
     decoder.load_gpt2(gpt)
 
+    # prevent tied weights
     encoder.load_state_dict({k: v.clone() for k, v in encoder.state_dict().items()})
     decoder.load_state_dict({k: v.clone() for k, v in decoder.state_dict().items()})
 
@@ -74,7 +75,7 @@ def main():
     _ = torch.compile(decoder, mode="reduce-overhead", fullgraph=True)
 
     print("Loading data...")
-    train_loader = SingleLoader(TRAIN_DATA_URL, train=False, debug=False)
+    train_loader = SingleLoader(TRAIN_DATA_URL, train=True, debug=False)
     val_loader = FullLoader(VAL_DATA_URL, train=False, debug=False)
 
     print("Train!")
