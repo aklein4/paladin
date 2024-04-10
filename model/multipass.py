@@ -32,7 +32,7 @@ class MultiPassBlock(MAGEBlock):
     
     def init_subclass_modules(self, config):
         self.ln_cond = nn.LayerNorm(config.hidden_size, eps=config.layer_norm_epsilon)
-        self.cond_gate = ConditionGate(config.hidden_size, self.z_dim + self.t_dim, config.cond_inter_dim, config)
+        self.cond_gate = ConditionGate(config.hidden_size, config.z_dim + config.t_dim, config.cond_inter_dim, config)
 
     def subforward(self, x, z, t):
         
@@ -44,10 +44,9 @@ class MultiPassBlock(MAGEBlock):
             self.ln_cond(x),
             torch.cat([z, t], dim=-1)
         )
+        x = x + x_cond
 
-        print("here!")
-
-        return x_cond
+        return x
 
 
 class MultiPassModel(MAGEModel):

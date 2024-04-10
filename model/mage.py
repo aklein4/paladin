@@ -76,10 +76,7 @@ class MAGEBlock(nn.Module):
         x = x + x_attn
 
         # extra handling
-        print(" ===== ")
-        print(x[0, 0])
         x = self.subforward(x, **kwargs)
-        print(x[0, 0])
 
         # ff layer
         x_ff = self.mlp(
