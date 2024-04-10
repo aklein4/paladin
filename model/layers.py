@@ -14,12 +14,12 @@ class OneXAttention(nn.Module):
         self.ln_x = nn.LayerNorm(hidden_size, eps=config.layer_norm_epsilon)
         self.ln_o = nn.LayerNorm(other_size, eps=config.layer_norm_epsilon)
 
-        self.q = nn.Linear(hidden_size, hidden_size)
-        self.k = nn.Linear(other_size, hidden_size)
+        self.q = nn.Linear(hidden_size, other_size)
+        self.k = nn.Linear(other_size, other_size)
         self.b = nn.Parameter(torch.zeros(1, 1, hidden_size))
-        self.v = nn.Linear(other_size, hidden_size)
+        self.v = nn.Linear(other_size, other_size)
 
-        self.proj = nn.Linear(hidden_size, hidden_size)
+        self.proj = nn.Linear(other_size, hidden_size)
         self.proj.weight.data.zero_()
         self.proj.bias.data.zero_()
 
