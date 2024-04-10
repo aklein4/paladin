@@ -17,19 +17,19 @@ DECODER_URL = "openai-community/gpt2"
 TRAIN_DATA_URL = 'JeanKaddour/minipile' # 'EleutherAI/the_pile_deduplicated'
 VAL_DATA_URL = 'JeanKaddour/minipile'
 
-NAME = "multipass-alpha"
+NAME = "multipass-test"
 
 TRAIN_CONFIG = {
     "lr": 3e-5,
     "bs": 8,
     "num_steps": 25000,
-    "warmup_steps": 1000,
-    "eval_freq": 1000,
+    "warmup_steps": 100,
+    "eval_freq": 500,
     "checkpoint_freq": 5000,
     "dtype": torch.bfloat16,
     "max_length": 1024,
     "memory_grad": False,
-    "max_eval_examples": 500
+    "max_eval_examples": 100
 }
 
 
