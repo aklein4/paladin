@@ -57,8 +57,8 @@ def main():
     decoder = MultiPassDecoder(config)
     decoder.load_gpt2(gpt)
 
-    encoder.load_state_dict({k: v.clone() for k, v in gpt.state_dict().items()})
-    decoder.load_state_dict({k: v.clone() for k, v in gpt.state_dict().items()})
+    encoder.load_state_dict({k: v.clone() for k, v in encoder.state_dict().items()})
+    decoder.load_state_dict({k: v.clone() for k, v in decoder.state_dict().items()})
 
     encoder = encoder.to(constants.DEVICE)
     decoder = decoder.to(constants.DEVICE)

@@ -101,7 +101,7 @@ class MultiPassDecoder(PreTrainedModel):
         )
 
         # use the same weights as the input embeddings
-        logits = F.linear(out.output, self.transformer.wte.weight)
+        logits = self.lm_head(out.output)
         logits = F.log_softmax(logits, dim=-1)
 
         return DotDict(
