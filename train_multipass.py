@@ -20,12 +20,12 @@ VAL_DATA_URL = 'JeanKaddour/minipile'
 
 TRAIN_CONFIG = {
     "lr": 1e-5,
-    "bs": 2,
+    "bs": 12,
     "num_steps": 10000,
     "warmup_steps": 1000,
     "eval_freq": 1000,
     "checkpoint_freq": 10000,
-    "dtype": torch.float32,
+    "dtype": torch.bfloat16,
     "max_length": 1024,
     "memory_grad": False,
     "max_eval_examples": 100
@@ -63,6 +63,9 @@ def main():
 
     encoder = encoder.to(constants.DEVICE)
     decoder = decoder.to(constants.DEVICE)
+
+    _ = torch.compile(encoder, mode="reduce-overhead", fullgraph=True)
+    _ = torch.compile(decoder, mode="reduce-overhead", fullgraph=True)
 
     print("Loading data...")
     train_loader = SingleLoader(TRAIN_DATA_URL, train=False, debug=True)
