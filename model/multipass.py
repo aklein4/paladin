@@ -44,9 +44,10 @@ class MultiPassBlock(MAGEBlock):
             self.ln_cond(x),
             torch.cat([z, t], dim=-1)
         )
-        x = x + x_cond
 
-        return x
+        print("here!")
+
+        return x_cond
 
 
 class MultiPassModel(MAGEModel):

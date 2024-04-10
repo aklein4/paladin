@@ -42,6 +42,7 @@ class ConditionBlock(MAGEBlock):
             self.ln_cond(x),
             cond
         )
+        print("here!")
         x = x + x_cond
 
         return x
