@@ -28,8 +28,6 @@ def test_mage_basic(tokenizer, model):
     diff = torch.max(torch.abs(model_out - mage_out_2.output))
     assert diff < 1e-4, f"Cached output mismatch! ({diff.item()})"
 
-    print("Model sanity check successful!")
-
 
 class ExtraBlock(MAGEBlock):
     def get_extra_dim(self, config):
@@ -46,7 +44,7 @@ def mage_test_extras(tokenizer, model):
     mage.load_gpt2(model)
     mage = mage.eval()
 
-    inputs = tokenizer("This is a test", return_tensors="pt").to(constants.DEVICE)
+    inputs = tokenizer("This is also a test", return_tensors="pt").to(constants.DEVICE)
     extras = [
         torch.randn(inputs.input_ids.shape[0], inputs.input_ids.shape[1], 33).to(constants.DEVICE),
         torch.randn(inputs.input_ids.shape[0], inputs.input_ids.shape[1], 67).to(constants.DEVICE),

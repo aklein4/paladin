@@ -255,7 +255,7 @@ class MultiPassTrainer(BaseTrainer):
                     z = encoder(x.input_ids)
 
                     # get noised encoding
-                    t = torch.rand(z.shape[:-1], device=constants.DEVICE, generator=generator)
+                    t = 0 * torch.rand(z.shape[:-1], device=constants.DEVICE, generator=generator)
                     noise = torch.randn(z.shape, device=constants.DEVICE, generator=generator)
                     z_noisy = add_noise(z, t, noise)
 
