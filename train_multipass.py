@@ -21,13 +21,13 @@ VAL_DATA_URL = 'JeanKaddour/minipile'
 TRAIN_CONFIG = {
     "lr": 1e-5,
     "bs": 8,
-    "num_steps": 10000,
+    "num_steps": 25000,
     "warmup_steps": 1000,
     "eval_freq": 1000,
-    "checkpoint_freq": 10000,
+    "checkpoint_freq": 5000,
     "dtype": torch.bfloat16,
     "max_length": 1024,
-    "memory_grad": False,
+    "memory_grad": True,
     "max_eval_examples": 100
 }
 
