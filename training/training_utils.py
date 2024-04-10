@@ -18,14 +18,14 @@ def lm_metrics(input_ids, logits, padding_mask=None):
 
     # calculate the logp
     logp = -F.cross_entropy(
-        logits.view(-1, logits.shape[-1]),
-        input_ids.view(-1),
+        logits.reshape(-1, logits.shape[-1]),
+        input_ids.reshape(-1),
         reduction='none'
-    ).view(logits.shape[0], logits.shape[1])
+    ).reshape(logits.shape[0], logits.shape[1])
 
     # apply the padding mask
-    masked_logp = logp.view(-1)[~padding_mask.view(-1)]
-    masked_input_ids = input_ids.view(-1)[~padding_mask.view(-1)]
+    masked_logp = logp.reshape(-1)[~padding_mask.reshape(-1)]
+    masked_input_ids = input_ids.reshape(-1)[~padding_mask.reshape(-1)]
 
     # loss is negative mean logp
     loss = -masked_logp.sum() / padding_mask.numel()

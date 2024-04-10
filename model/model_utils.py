@@ -51,7 +51,7 @@ def get_timestep_embedding(
     embeddings. :return: an [og_shape, dim] Tensor of positional embeddings.
     """
     og_shape = timesteps.shape
-    timesteps = timesteps.view(-1)
+    timesteps = timesteps.reshape(-1)
 
     half_dim = embedding_dim // 2
     exponent = -math.log(max_period) * torch.arange(
@@ -76,7 +76,7 @@ def get_timestep_embedding(
     if embedding_dim % 2 == 1:
         emb = torch.nn.functional.pad(emb, (0, 1, 0, 0))
 
-    emb = emb.view(*og_shape, -1)
+    emb = emb.reshape(*og_shape, -1)
     return emb
 
 
