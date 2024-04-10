@@ -17,10 +17,12 @@ class MultiPassConfig(GPT2Config):
         self,
         z_dim=8,
         t_dim=32,
+        init_scale=0.02,
         **kwargs
     ):
         self.z_dim = z_dim
         self.t_dim = t_dim
+        self.init_scale = init_scale
         
         super().__init__(**kwargs)
         self.model_type = "multipass"
@@ -91,6 +93,15 @@ class MultiPassDecoder(PreTrainedModel):
         self.transformer = MultiPassModel(config)
         self.lm_head = nn.Linear(config.n_embd, config.vocab_size, bias=False)
 
+        self.transformer.init_control(
+            torch.cat(
+                [
+                    torch.ones(config.z_dim) * config.init_scale,
+                    torch.zeros(config.t_dim)
+                ],
+                dim=-1
+            )
+        )
 
     def forward(self, input_ids, z, t, memory=None):
 

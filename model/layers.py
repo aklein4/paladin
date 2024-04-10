@@ -93,8 +93,25 @@ class MAGEMLP(nn.Module):
 
         # initial conv needs zero padding
         self.c_fc.bias = gpt2.c_fc.bias
-        self.c_fc.weight.data.normal_(std=0.02)
         self.c_fc.weight.data[:self.embed_dim] = gpt2.c_fc.weight.data.clone()
+
+
+    @torch.no_grad()
+    def init_control(
+        self,
+        scales: torch.FloatTensor
+    ):
+        """ Initialize the control parameters of the MAGEMLP.
+
+        Args:
+            scales (torch.FloatTensor): Scales for the control parameters [extra_dim]
+        """
+        n = torch.randn_like(self.c_fc.weight.data[self.embed_dim:])
+        if isinstance(scales, (float, int)):
+            n *= scales
+        else:
+            n *= scales.unsqueeze(-1).to(n.device).to(n.dtype)
+        self.c_fc.weight.data[self.embed_dim:] = n
 
 
 class OneXAttention(nn.Module):

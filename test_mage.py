@@ -14,6 +14,7 @@ def test_mage_basic(tokenizer, model):
 
     mage = MAGEModel(model.config).to(constants.DEVICE)
     mage.load_gpt2(model)
+    mage.init_control(0.0)
     mage = mage.eval()
 
     inputs = tokenizer("This is a test", return_tensors="pt").to(constants.DEVICE)
@@ -42,6 +43,7 @@ def mage_test_extras(tokenizer, model):
 
     mage = ExtraModel(model.config).to(constants.DEVICE)
     mage.load_gpt2(model)
+    mage.init_control(0.0)
     mage = mage.eval()
 
     inputs = tokenizer("This is also a test", return_tensors="pt").to(constants.DEVICE)

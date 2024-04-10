@@ -36,6 +36,7 @@ TRAIN_CONFIG = {
 MODEL_CONFIG = {
     "z_dim": 8,
     "t_dim": 64,
+    "init_scale": 0.02,
     "attn_pdrop": 0.0,
     "embd_pdrop": 0.0,
     "resid_pdrop": 0.0,

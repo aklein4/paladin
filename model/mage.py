@@ -148,6 +148,19 @@ class MAGEBlock(nn.Module):
         self.mlp.load_gpt2(block.mlp)
 
 
+    @torch.no_grad()
+    def init_control(
+        self,
+        scales: torch.FloatTensor
+    ):
+        """ Initialize the control parameters of the ff module.
+
+        Args:
+            scales (torch.FloatTensor): Scales for the control parameters [extra_dim]
+        """
+        self.mlp.init_control(scales)
+
+
 class MAGEModel(PreTrainedModel):
     """ MAGE model based on gpt2.
      - Uses MAGEBlock instead of GPT2Block.
@@ -299,3 +312,17 @@ class MAGEModel(PreTrainedModel):
         # custom blocks
         for i in range(len(self.h_agent)):
             self.h_agent[i].load_gpt2(gpt2.h[i])
+
+
+    @torch.no_grad()
+    def init_control(
+        self,
+        scales: torch.FloatTensor
+    ):
+        """ Initialize the control parameters of the ff module.
+
+        Args:
+            scales (torch.FloatTensor): Scales for the control parameters [extra_dim]
+        """
+        for block in self.h_agent:
+            block.init_control(scales)
