@@ -134,11 +134,10 @@ class ConditionGate(nn.Module):
 
 
     def forward(self, x, cond):
-        q = self.q_proj(x)
-        k = self.k_proj(cond)
-
-        attn = self.act(q)
-        v = attn * k
+        q = self.act(self.q_proj(x))
+        k = self.act(self.k_proj(cond))
+        
+        v = q * k
 
         out = self.out_proj(v)
         out = self.dropout(out)
