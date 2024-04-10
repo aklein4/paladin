@@ -119,6 +119,7 @@ class MultiPassTrainer(BaseTrainer):
         x.input_ids = torch.clip(x.input_ids, max=len(tokenizer)-1)
 
         x.padding_mask = x.attention_mask == 0
+        print(torch.sum(x.padding_mask.long()).item())
 
         return x
 
