@@ -26,7 +26,7 @@ TRAIN_CONFIG = {
     "warmup_steps": 100,
     "eval_freq": 500,
     "checkpoint_freq": 5000,
-    "dtype": torch.bfloat16,
+    "dtype": torch.bfloat32,
     "max_length": 1024,
     "memory_grad": False,
     "max_eval_examples": 100
@@ -73,7 +73,7 @@ def main():
     _ = torch.compile(decoder, mode="reduce-overhead", fullgraph=True)
 
     print("Loading data...")
-    train_loader = SingleLoader(TRAIN_DATA_URL, train=True, debug=False)
+    train_loader = SingleLoader(TRAIN_DATA_URL, train=False, debug=False)
     val_loader = FullLoader(VAL_DATA_URL, train=False, debug=False)
 
     print("Train!")
