@@ -6,7 +6,7 @@ from transformers import PreTrainedModel
 from transformers.models.gpt2.modeling_gpt2 import GPT2Model
 from transformers.models.gpt2.configuration_gpt2 import GPT2Config
 
-from model.mage import MAGEBlock
+from model.mage import MAGEBlock, MAGEModel
 from model.model_utils import get_timestep_embedding
 
 from utils import DotDict
@@ -44,7 +44,7 @@ class MultiPassBlock(MAGEBlock):
         return x, proj_extras, emb_extras
 
 
-class MultiPassModel(PreTrainedModel):
+class MultiPassModel(MAGEModel):
     _block_module = MultiPassBlock
 
 

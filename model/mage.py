@@ -291,8 +291,9 @@ class MAGEModel(PreTrainedModel):
         self.drop.load_state_dict(gpt2.drop.state_dict())
         self.ln_f.load_state_dict(gpt2.ln_f.state_dict())
 
-        # blocks
-        self.h.load_state_dict(gpt2.h.state_dict())
+        # copy blocks since these params are reused
+        state = {k: v.clone() for k, v in gpt2.h.state_dict().items()}
+        self.h.load_state_dict(state)
 
         # custom blocks
         for i in range(len(self.h_agent)):
