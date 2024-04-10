@@ -4,7 +4,7 @@ import huggingface_hub as hf
 import numpy as np
 import pandas as pd
 import os
-from tqdm import tqdm
+from tqdm.notebook import tqdm
 
 from loader.base_loader import BaseLoader
 

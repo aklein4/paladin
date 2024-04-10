@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import os
-from tqdm import tqdm
+from tqdm.notebook import tqdm
 
 from training.base_trainer import BaseTrainer
 from training.training_utils import lm_metrics
@@ -30,7 +30,8 @@ class MultiPassTrainer(BaseTrainer):
         "checkpoint_freq",
         "dtype",
         "max_length",
-        "memory_grad"
+        "memory_grad",
+        "max_eval_examples"
     ]
 
     _metrics = ["loss", "bpb", "ppl", "acc"]
@@ -149,50 +150,61 @@ class MultiPassTrainer(BaseTrainer):
 
         generator = torch.Generator(device=constants.DEVICE)
 
+        examples = 0
         val_loader.reset()
         with tqdm(desc="Evaluating", leave=False) as pbar:
             while not val_loader.done:
 
-                # handle inputs
-                x = self._get_tokens(val_loader, tokenizer)
+                enable_autocast = self.dtype != torch.float32
+                with torch.autocast(
+                    device_type=str(constants.DEVICE),
+                    dtype=(torch.float16 if not enable_autocast else self.dtype),
+                    enabled=enable_autocast
+                ):
 
-                # get reusable things
-                z = encoder(x.input_ids)
-                memory = decoder(
-                    x.input_ids,
-                    z, torch.zeros_like(z)[:, :, 0]
-                ).memory
-                noise = torch.randn(z.shape, generator=generator, device=constants.DEVICE)
-                
-                # try all different noise levels
-                for t in self._eval_t:
-                    t_tensor = torch.ones_like(z)[:, :, 0] * t
+                    # handle inputs
+                    x = self._get_tokens(val_loader, tokenizer)
 
-                    # get noised z
-                    z_noisy = add_noise(
-                        z, t_tensor, noise
-                    )
-
-                    # get logits
-                    logits = decoder(
+                    # get reusable things
+                    z = encoder(x.input_ids)
+                    memory = decoder(
                         x.input_ids,
-                        z_noisy, t_tensor,
-                        memory=memory
-                    ).logits
+                        z, torch.zeros_like(z)[:, :, 0]
+                    ).memory
+                    noise = torch.randn(z.shape, generator=generator, device=constants.DEVICE)
+                    
+                    # try all different noise levels
+                    for t in self._eval_t:
+                        t_tensor = torch.ones_like(z)[:, :, 0] * t
 
-                    # get metrics
-                    metrics = lm_metrics(
-                        x.input_ids, logits,
-                        x.padding_mask
-                    )
+                        # get noised z
+                        z_noisy = add_noise(
+                            z, t_tensor, noise
+                        )
 
-                    # save metrics
-                    for m in self._metrics:
-                        tmp_log[m][t].append(metrics[m].item())
+                        # get logits
+                        logits = decoder(
+                            x.input_ids,
+                            z_noisy, t_tensor,
+                            memory=memory
+                        ).logits
+
+                        # get metrics
+                        metrics = lm_metrics(
+                            x.input_ids, logits,
+                            x.padding_mask
+                        )
+
+                        # save metrics
+                        for m in self._metrics:
+                            tmp_log[m][t].append(metrics[m].item())
 
                 pbar.set_postfix({str(k): np.mean(v) for k, v in tmp_log.acc.items()})
                 pbar.update(self.bs)
-                break
+
+                examples += self.bs
+                if examples >= self.max_eval_examples:
+                    break
 
         # save metrics
         for m in self._metrics:
@@ -228,7 +240,6 @@ class MultiPassTrainer(BaseTrainer):
         with tqdm(range(self.num_steps), desc="Training") as pbar:
             for step in pbar:
 
-                optimizer.zero_grad(True)
                 encoder.train()
                 decoder.train()
 

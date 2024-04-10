@@ -2,7 +2,7 @@ import torch
 
 import numpy as np
 import argparse
-from tqdm import tqdm
+from tqdm.notebook import tqdm
 
 from transformers import GPT2TokenizerFast
 

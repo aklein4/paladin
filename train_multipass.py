@@ -12,7 +12,7 @@ import constants as constants
 
 
 ENCODER_URL = "distilbert/distilgpt2"
-DECODER_URL = "distilbert/distilgpt2"
+DECODER_URL = "openai-community/gpt2"
 
 TRAIN_DATA_URL = 'JeanKaddour/minipile' # 'EleutherAI/the_pile_deduplicated'
 VAL_DATA_URL = 'JeanKaddour/minipile'
@@ -20,14 +20,15 @@ VAL_DATA_URL = 'JeanKaddour/minipile'
 
 TRAIN_CONFIG = {
     "lr": 1e-5,
-    "bs": 3,
-    "num_steps": 1000,
-    "warmup_steps": 100,
-    "eval_freq": 100,
-    "checkpoint_freq": 500,
+    "bs": 1,
+    "num_steps": 10000,
+    "warmup_steps": 1000,
+    "eval_freq": 1000,
+    "checkpoint_freq": 10000,
     "dtype": torch.float16,
-    "max_length": 32,
-    "memory_grad": False
+    "max_length": 1024,
+    "memory_grad": False,
+    "max_eval_examples": 100
 }
 
 
