@@ -32,6 +32,7 @@ class MAGEBlock(nn.Module):
 
     def __init__(self, config, layer_idx=None):
         super().__init__()
+        self.config = config
 
         self.hidden_size = config.hidden_size
         self.inner_dim = config.n_inner if config.n_inner is not None else 4 * self.hidden_size
@@ -128,12 +129,12 @@ class MAGEBlock(nn.Module):
 
         # copy the ln layers
         self.ln_1.load_state_dict(block.ln_1.state_dict())
-        self.ln_mem.load_state_dict(block.ln_1.state_dict())
+        self.ln_mem.load_state_dict({k: v.clone() for k, v in block.ln_1.state_dict().items()})
         self.ln_2.load_state_dict(block.ln_2.state_dict())
 
         # copy what we can from the attentions
         state = block.attn.state_dict()
-        state = {k: v for k, v in state.items() if "c_attn" not in k}
+        state = {k: v.clone() for k, v in state.items() if "c_attn" not in k}
         self.attn.load_state_dict(state, strict=False)
 
         # copy the attention matrices

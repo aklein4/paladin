@@ -93,7 +93,7 @@ class MAGEMLP(nn.Module):
         # initial conv needs zero padding
         self.c_fc.bias = gpt2.c_fc.bias
         self.c_fc.weight.data.zero_()
-        self.c_fc.weight.data[:self.embed_dim] = gpt2.c_fc.weight.data
+        self.c_fc.weight.data[:self.embed_dim] = gpt2.c_fc.weight.data.clone()
 
 
 class OneXAttention(nn.Module):
