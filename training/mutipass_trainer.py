@@ -268,7 +268,7 @@ class MultiPassTrainer(BaseTrainer):
                 # save metrics
                 for m in self._metrics:
                     self.log.train[m].append(metrics[m].item())
-                pbar.set_postfix({k: v.item() for k, v in metrics})
+                pbar.set_postfix({k: v.item() for k, v in metrics.items()})
 
                 if (step+1) % self.eval_freq == 0 or step == self.num_steps-1:
                     self.evaluate(tokenizer, encoder, decoder, val_loader)
