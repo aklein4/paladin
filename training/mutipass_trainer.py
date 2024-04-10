@@ -66,11 +66,9 @@ class MultiPassTrainer(BaseTrainer):
 
         # save log
         out_log = {}
-        for k, v in self.log.train.items():
-            out_log[f"train_{k}"] = v
         for k, v in self.log.eval.items():
             for t, w in v.items():
-                out_log[f"eval_{k}_{t:.2f}"] = w
+                out_log[f"{k}_{t:.2f}"] = w
 
         max_len = max([len(v) for v in out_log.values()])
         for k, v in out_log.items():
