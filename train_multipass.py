@@ -23,18 +23,18 @@ TRAIN_CONFIG = {
     "lr": 3e-5,
     "bs": 8,
     "num_steps": 20000,
-    "warmup_steps": 100,
-    "eval_freq": 500,
+    "warmup_steps": 1000,
+    "eval_freq": 100,
     "checkpoint_freq": 5000,
     "dtype": torch.bfloat16,
     "max_length": 1024,
     "memory_grad": False,
-    "max_eval_examples": 100
+    "max_eval_examples": 500
 }
 
 
 MODEL_CONFIG = {
-    "z_dim": 64,
+    "z_dim": 8,
     "t_dim": 32,
     "init_scale": 0.0,
     "attn_pdrop": 0.0,
