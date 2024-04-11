@@ -16,7 +16,7 @@ from utils import DotDict
 class MultiPassConfig(GPT2Config):
     def __init__(
         self,
-        z_dim=8,
+        z_dim=64,
         t_dim=32,
         cond_inter_dim=256,
         **kwargs
