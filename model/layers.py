@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 import torch
 import torch.nn as nn
@@ -12,25 +12,21 @@ class MAGEMLP(nn.Module):
     def __init__(
             self,
             intermediate_size: int,
-            extra_dim: int,
             config
         ):
         """ A transformer MLP layer for MAGE blocks that can
-        take extra inputs.
+        addd extra conditions to the intermediate layer.
 
         Args:
             intermediate_size (int): Size of transformer ff layer.
-            extra_dim (int): Total dimension of extra inputs.
             config (GPT2Config-like): Config for the transformer.
         """
         super().__init__()
 
         self.intermediate_size = intermediate_size
         self.embed_dim = config.hidden_size
-        self.extra_dim = extra_dim
-        self.full_dim = self.embed_dim + self.extra_dim
 
-        self.c_fc = Conv1D(intermediate_size, self.full_dim)
+        self.c_fc = Conv1D(intermediate_size, self.embed_dim)
         self.c_proj = Conv1D(self.embed_dim, intermediate_size)
         
         self.act = ACT2FN[config.activation_function]
@@ -40,78 +36,27 @@ class MAGEMLP(nn.Module):
     def forward(
             self,
             x: torch.FloatTensor,
-            proj_extras: List[torch.FloatTensor],
-            emb_extras: List[torch.FloatTensor]
+            cond: Optional[torch.FloatTensor] = None
         ) -> torch.FloatTensor:
         """ Forward pass of the MAGEMLP layer.
 
         Args:
             x (torch.FloatTensor): Input to the layer [B, S, D].
-            proj_extras (List[torch.FloatTensor]): List of extra inputs [B, S, <D>] projected into the ff layer.
-            emb_extras (List[torch.FloatTensor]): List of extra inputs [B, S, D] embedded into the ff layer.
+            cond (Optional[torch.FloatTensor]): Extra conditions [B, S, D_inter]. Defaults to None.
 
         Returns:
             torch.FloatTensor: Output of the layer [B, S, D].
         """
-        for i in range(len(proj_extras)):
-            s = proj_extras[i].shape
-            assert s[:2] == x.shape[:2], f"Shape mismatch for proj_extra {i}: {s[:2]} != {x.shape[:2]}"
-            
-        targ_s = (x.shape[0], x.shape[1], self.intermediate_size)
-        for i in range(len(emb_extras)):
-            s = tuple(emb_extras[i].shape)
-            assert s == targ_s, f"Shape mismatch for emb_extra {i}: {s} != {targ_s}"
 
-        h = torch.cat([x] + proj_extras, dim=-1)
-
-        h = self.c_fc(h)
-        for emb in emb_extras:
-            h = h + emb
+        h = self.c_fc(x)
+        if cond is not None:
+            h = h + cond
 
         h = self.act(h)
         h = self.c_proj(h)
         h = self.dropout(h)
 
         return h
-
-
-    @torch.no_grad()
-    def load_gpt2(
-        self,
-        gpt2: nn.Module
-    ):
-        """ Load the weights of a GPT2MLP into this layer.
-
-        Args:
-            gpt2_mlp (nn.Module): GPT2MLP to load.
-        """
-
-        # easy loading
-        self.act.load_state_dict(gpt2.act.state_dict())
-        self.dropout.load_state_dict(gpt2.dropout.state_dict())
-        self.c_proj.load_state_dict(gpt2.c_proj.state_dict())
-
-        # initial conv needs zero padding
-        self.c_fc.bias = gpt2.c_fc.bias
-        self.c_fc.weight.data[:self.embed_dim] = gpt2.c_fc.weight.data.clone()
-
-
-    @torch.no_grad()
-    def init_control(
-        self,
-        scales: torch.FloatTensor
-    ):
-        """ Initialize the control parameters of the MAGEMLP.
-
-        Args:
-            scales (torch.FloatTensor): Scales for the control parameters [extra_dim]
-        """
-        n = torch.randn_like(self.c_fc.weight.data[self.embed_dim:])
-        if isinstance(scales, (float, int)):
-            n *= scales
-        else:
-            n *= scales.unsqueeze(-1).to(n.device).to(n.dtype)
-        self.c_fc.weight.data[self.embed_dim:] = n
 
 
 class ConditionGate(nn.Module):

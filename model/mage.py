@@ -5,8 +5,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from transformers import PreTrainedModel
-from transformers.models.gpt2.modeling_gpt2 import GPT2Block, GPT2Attention, GPT2MLP
+from transformers.models.gpt2.modeling_gpt2 import GPT2Block, GPT2Attention
 
+from model.layers import MAGEMLP
 from model.model_utils import get_gpt2_causal_mask
 from utils import DotDict
 
@@ -26,6 +27,7 @@ class MAGEBlock(nn.Module):
 
         self.hidden_size = config.hidden_size
         self.inner_dim = config.n_inner if config.n_inner is not None else 4 * self.hidden_size
+        self.cond_dim = self.inner_dim
 
         # attn layer
         self.ln_1 = nn.LayerNorm(self.hidden_size, eps=config.layer_norm_epsilon)
@@ -37,7 +39,7 @@ class MAGEBlock(nn.Module):
 
         # ff layer
         self.ln_2 = nn.LayerNorm(self.hidden_size, eps=config.layer_norm_epsilon)
-        self.mlp = GPT2MLP(self.inner_dim, config)
+        self.mlp = MAGEMLP(self.inner_dim, config)
 
         # initialize extra modules
         self.init_subclass_modules(config)
@@ -56,12 +58,12 @@ class MAGEBlock(nn.Module):
     ) -> torch.Tensor:
         """ Forward pass of the block with.
          - x and memory should be the same size.
-         - kwargs are passed to subforward between attention and ff layer.
+         - kwargs are passed to get_cond between attention and ff layer.
 
         Args:
             x (torch.Tensor): Input tensor [B, S, D]
             memory (torch.Tensor): Memory tensor [B, S, D]
-            kwargs: Extra inputs passed to subforward.
+            kwargs: Extra inputs passed to get_cond.
 
         Returns:
             torch.Tensor: Output tensor [B, S, D]
@@ -76,11 +78,12 @@ class MAGEBlock(nn.Module):
         x = x + x_attn
 
         # extra handling
-        x = self.subforward(x, **kwargs)
+        cond = self.get_cond(x, **kwargs)
 
         # ff layer
         x_ff = self.mlp(
             self.ln_2(x),
+            cond=cond
         )
         x = x + x_ff
 
@@ -88,23 +91,23 @@ class MAGEBlock(nn.Module):
 
 
     # to be overwridden by subclasses
-    def subforward(
+    def get_cond(
         self,
         x: torch.Tensor,
         **kwargs
     ) -> torch.Tensor:
-        """ Subforward pass of the block.
-         - Can be used to modify x between the attention and ff layer.
-         - kwargs are passed from forward.
+        """ Get the condition tensor for the ff block.
+         - can return None
+         - calculated between attention and ff layer.
 
         Args:
             x (torch.Tensor): Input tensor [B, S, D].
             kwargs: Extra inputs passed from forward.
 
         Returns:
-            torch.Tensor: Modified x.
+            Optional[torch.Tensor]: Condition tensor [B, S, D].
         """
-        return x
+        return None
     
 
     @torch.no_grad()

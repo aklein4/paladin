@@ -16,9 +16,8 @@ from utils import DotDict
 class MultiPassConfig(GPT2Config):
     def __init__(
         self,
-        z_dim=64,
+        z_dim=8,
         t_dim=32,
-        cond_inter_dim=256,
         **kwargs
     ):
         self.z_dim = z_dim
@@ -31,31 +30,22 @@ class MultiPassConfig(GPT2Config):
 class MultiPassBlock(MAGEBlock):
     
     def init_subclass_modules(self, config):
-        self.ln_cond = nn.LayerNorm(config.hidden_size, eps=config.layer_norm_epsilon)
+        self.z_proj = nn.Linear(config.z_dim, self.cond_dim, bias=False)
+        self.t_proj = nn.Linear(config.t_dim, self.cond_dim, bias=False)
 
-        self.q_proj = nn.Linear(config.hidden_size + 1, config.z_dim)
-        self.q_act = ACT2FN[config.activation_function]
+        self.z_proj.weight.data.zero_()
+        self.t_proj.weight.data.zero_()
 
-        self.out_proj = nn.Linear(config.z_dim, config.hidden_size, bias=False)
-        self.out_proj.weight.data.normal_(std=0.02)
-        self.out_dropout = nn.Dropout(config.resid_pdrop)
-
-    def subforward(self, x, z, t):
+    def get_cond(self, x, z, t):
         
-        # t = get_timestep_embedding(
-        #     t, self.config.t_dim, max_period=1
-        # )
-        t = t.unsqueeze(-1)
+        t = get_timestep_embedding(
+            t, self.config.t_dim, max_period=1
+        )
 
-        q = torch.cat([self.ln_cond(x), t], dim=-1)
-        q = self.q_act(self.q_proj(q))
+        z = self.z_proj(z)
+        t = self.t_proj(t)
 
-        v = q * z
-        x_cond = self.out_proj(v)
-        x_cond = self.out_dropout(x_cond)
-
-        x = x + x_cond
-        return x
+        return z + t
 
 
 class MultiPassModel(MAGEModel):
