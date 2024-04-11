@@ -287,3 +287,57 @@ class MAGEModel(PreTrainedModel):
         # custom blocks
         for i in range(len(self.h_agent)):
             self.h_agent[i].load_gpt2(gpt2.h[i])
+
+
+class MAGEModelLM(PreTrainedModel):
+    """ MAGE model with a linear head for language modeling.
+     - Uses MAGEModel as base.
+    """
+    def __init__(self, config):
+        super().__init__(config)
+
+        self.transformer = MAGEModel(config)
+        self.lm_head = nn.Linear(config.hidden_size, config.vocab_size, bias=False)
+    
+
+    def forward(self, input_ids, memory=None):
+        out = self.transformer(
+            input_ids=input_ids,
+            memory=memory
+        )
+
+        # use the same weights as the input embeddings
+        logits = self.lm_head(out.output)
+        logits = F.log_softmax(logits, dim=-1)
+
+        return DotDict(
+            logits=logits,
+            memory=out.memory,
+        )
+
+
+    def prepare_training(self, memory_grad):
+        if memory_grad:
+            self.enable_memory_grad()
+        else:
+            self.disable_memory_grad()
+
+        self.requires_grad_(True)
+        self.wte.requires_grad_(False)
+        self.wpe.requires_grad_(False)
+        self.lm_head.requires_grad_(False)
+        if not memory_grad:
+            self.h.requires_grad_(False)
+
+        p = list(self.h_agent.parameters())
+        p += list(self.ln_f.parameters())
+        if memory_grad:
+            p += list(self.h.parameters())
+
+        return p
+    
+
+    @torch.no_grad()
+    def load_gpt2(self, gpt2):
+        self.transformer.load_gpt2(gpt2.transformer)
+        self.lm_head.load_state_dict(gpt2.lm_head.state_dict())
