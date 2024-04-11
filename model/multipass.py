@@ -37,7 +37,7 @@ class MultiPassBlock(MAGEBlock):
         self.q_act = ACT2FN[config.activation_function]
 
         self.out_proj = nn.Linear(config.z_dim, config.hidden_size, bias=False)
-        self.out_proj.weight.data.zero_()
+        self.out_proj.weight.data.normal_(std=0.02)
         self.out_dropout = nn.Dropout(config.resid_pdrop)
 
     def subforward(self, x, z, t):
