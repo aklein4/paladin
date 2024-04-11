@@ -179,7 +179,7 @@ class MAGETrainer(BaseTrainer):
         val_loader
     ):
 
-        params = model.prepare_training()
+        params = model.prepare_training(self.memory_grad)
 
         optimizer = torch.optim.AdamW(params, lr=self.lr)
         lr_scheduler = torch.optim.lr_scheduler.LinearLR(
