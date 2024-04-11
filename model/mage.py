@@ -318,9 +318,9 @@ class MAGEModelLM(PreTrainedModel):
 
     def prepare_training(self, memory_grad):
         if memory_grad:
-            self.enable_memory_grad()
+            self.transformer.enable_memory_grad()
         else:
-            self.disable_memory_grad()
+            self.transformer.disable_memory_grad()
 
         self.requires_grad_(True)
         self.wte.requires_grad_(False)
