@@ -33,7 +33,7 @@ class MultiPassBlock(MAGEBlock):
     def init_subclass_modules(self, config):
         self.ln_cond = nn.LayerNorm(config.hidden_size, eps=config.layer_norm_epsilon)
 
-        self.q_proj = nn.Linear(config.hidden_size + config.t_dim, config.z_dim)
+        self.q_proj = nn.Linear(config.hidden_size + 1, config.z_dim)
         self.q_act = ACT2FN[config.activation_function]
 
         self.out_proj = nn.Linear(config.z_dim, config.hidden_size, bias=False)
@@ -42,9 +42,10 @@ class MultiPassBlock(MAGEBlock):
 
     def subforward(self, x, z, t):
         
-        t = get_timestep_embedding(
-            t, self.config.t_dim, max_period=1
-        )
+        # t = get_timestep_embedding(
+        #     t, self.config.t_dim, max_period=1
+        # )
+        t = t.unsqueeze(-1)
 
         q = torch.cat([self.ln_cond(x), t], dim=-1)
         q = self.q_act(self.q_proj(q))
