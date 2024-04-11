@@ -29,7 +29,7 @@ TRAIN_CONFIG = {
     "dtype": torch.bfloat16,
     "max_length": 1024,
     "memory_grad": False,
-    "max_eval_examples": 500
+    "max_eval_examples": 100
 }
 
 
