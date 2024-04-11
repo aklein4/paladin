@@ -24,7 +24,7 @@ TRAIN_CONFIG = {
     "bs": 8,
     "num_steps": 20000,
     "warmup_steps": 1000,
-    "eval_freq": 100,
+    "eval_freq": 1000,
     "checkpoint_freq": 5000,
     "dtype": torch.bfloat16,
     "max_length": 1024,
