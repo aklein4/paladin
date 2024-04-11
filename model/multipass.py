@@ -75,7 +75,7 @@ class MultiPassEncoder(PreTrainedModel):
         z_out = torch.zeros_like(z)
         z_out[:, :-1] = z[:, 1:]
 
-        return z
+        return z_out
     
 
     def prepare_training(self):
