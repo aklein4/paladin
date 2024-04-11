@@ -15,7 +15,7 @@ from utils import DotDict
 import constants as constants
 
 
-class MultiPassTrainer(BaseTrainer):
+class MAGETrainer(BaseTrainer):
 
     _log_file = os.path.join(constants.LOCAL_DATA_PATH, "log.csv")
     _progress_file = os.path.join(constants.LOCAL_DATA_PATH, "progress.png")
