@@ -20,7 +20,7 @@ VAL_DATA_URL = 'JeanKaddour/minipile'
 NAME = "multipass-beta"
 
 TRAIN_CONFIG = {
-    "lr": 1e-4,
+    "lr": 3e-5,
     "bs": 8,
     "num_steps": 20000,
     "warmup_steps": 100,
@@ -34,7 +34,7 @@ TRAIN_CONFIG = {
 
 
 MODEL_CONFIG = {
-    "z_dim": 8,
+    "z_dim": 64,
     "t_dim": 64,
     "cond_inter_dim": 256,
     "attn_pdrop": 0.0,
