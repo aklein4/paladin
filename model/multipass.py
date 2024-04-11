@@ -5,9 +5,9 @@ import torch.nn.functional as F
 from transformers import PreTrainedModel
 from transformers.models.gpt2.modeling_gpt2 import GPT2Model
 from transformers.models.gpt2.configuration_gpt2 import GPT2Config
+from transformers.activations import ACT2FN
 
 from model.mage import MAGEBlock, MAGEModel
-from model.layers import ConditionGate
 from model.model_utils import get_timestep_embedding
 
 from utils import DotDict
@@ -32,7 +32,13 @@ class MultiPassBlock(MAGEBlock):
     
     def init_subclass_modules(self, config):
         self.ln_cond = nn.LayerNorm(config.hidden_size, eps=config.layer_norm_epsilon)
-        self.cond_gate = ConditionGate(config.hidden_size, config.z_dim + config.t_dim, config.cond_inter_dim, config)
+
+        self.q_proj = nn.Linear(config.hidden_size + config.t_dim, config.z_dim)
+        self.q_act = ACT2FN[config.activation_function]
+
+        self.out_proj = nn.Linear(config.z_dim, config.hidden_size, bias=False)
+        self.out_proj.weight.data.zero_()
+        self.out_dropout = nn.Dropout(config.resid_pdrop)
 
     def subforward(self, x, z, t):
         
@@ -40,12 +46,14 @@ class MultiPassBlock(MAGEBlock):
             t, self.config.t_dim, max_period=1
         )
 
-        x_cond = self.cond_gate(
-            self.ln_cond(x),
-            torch.cat([z, t], dim=-1)
-        )
-        x = x + x_cond
+        q = torch.cat([self.ln_cond(x), t], dim=-1)
+        q = self.q_act(self.q_proj(q))
 
+        v = q * z
+        x_cond = self.out_proj(v)
+        x_cond = self.out_dropout(x_cond)
+
+        x = x + x_cond
         return x
 
 
