@@ -18,6 +18,7 @@ class MultiPassConfig(GPT2Config):
         self,
         z_dim=8,
         t_dim=32,
+        init_scale=0.02,
         **kwargs
     ):
         self.z_dim = z_dim
@@ -33,8 +34,8 @@ class MultiPassBlock(MAGEBlock):
         self.z_proj = nn.Linear(config.z_dim, self.cond_dim, bias=False)
         self.t_proj = nn.Linear(config.t_dim, self.cond_dim, bias=False)
 
-        self.z_proj.weight.data.zero_()
-        self.t_proj.weight.data.zero_()
+        self.z_proj.weight.data.normal_(std=config.init_scale)
+        self.t_proj.weight.data.normal_(std=config.init_scale)
 
     def get_cond(self, x, z, t):
         
