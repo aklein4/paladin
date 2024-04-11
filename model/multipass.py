@@ -23,6 +23,7 @@ class MultiPassConfig(GPT2Config):
     ):
         self.z_dim = z_dim
         self.t_dim = t_dim
+        self.init_scale = init_scale
         
         super().__init__(**kwargs)
         self.model_type = "multipass"
