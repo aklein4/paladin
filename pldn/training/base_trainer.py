@@ -6,7 +6,7 @@ import numpy as np
 
 import huggingface_hub as hf
 
-import constants
+import utils.constants as constants
 
 class BaseTrainer:
 
