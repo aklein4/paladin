@@ -4,9 +4,9 @@ import torch.nn.functional as F
 
 from transformers import GPT2Model, GPT2TokenizerFast
 
-from model.mage import MAGEModel, MAGEBlock
-from model.layers import ConditionGate
-import constants as constants
+from modeling.mage import MAGEModel, MAGEBlock
+from modeling.layers import ConditionGate
+import utils.constants as constants
 
 
 TEST_URL = 'openai-community/gpt2'
