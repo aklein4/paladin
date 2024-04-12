@@ -3,7 +3,7 @@ import torch.nn.functional as F
 
 import numpy as np
 
-from utils import DotDict
+from utils.data_utils import DotDict
 
 
 def lm_metrics(input_ids, logits, padding_mask=None):
