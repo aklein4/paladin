@@ -34,7 +34,7 @@ class ArchMAGEBLock(MAGEBlock):
         self.z_proj.weight.data.zero_()
         self.t_proj.weight.data.zero_()
     
-    def forward(self, x, z, t):
+    def get_cond(self, x, z, t):
         t = get_timestep_embedding(t, self.cond_dim, scale=self.scale, max_period=self.max_period)
         
         z = self.z_proj(z)
