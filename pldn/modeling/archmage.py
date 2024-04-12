@@ -35,7 +35,7 @@ class ArchMAGEBLock(MAGEBlock):
         self.t_proj.weight.data.zero_()
     
     def get_cond(self, x, z, t):
-        t = get_timestep_embedding(t, self.cond_dim, scale=self.scale, max_period=self.max_period)
+        t = get_timestep_embedding(t, self.config.t_dim)
         
         z = self.z_proj(z)
         t = self.t_proj(t)

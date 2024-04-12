@@ -41,7 +41,7 @@ def get_timestep_embedding(
     flip_sin_to_cos: bool = False,
     downscale_freq_shift: float = 1,
     scale: float = 1,
-    max_period: int = 1,
+    max_period: float = 1.0,
 ):
     """
     This matches the implementation in Denoising Diffusion Probabilistic Models: Create sinusoidal timestep embeddings.
