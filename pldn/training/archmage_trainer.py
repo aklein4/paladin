@@ -180,8 +180,6 @@ class ArchMAGETrainer(BaseTrainer):
                             z, t_tensor, noise
                         )
 
-                        print(t, z_noisy[0, 0])
-
                         # get logits
                         logits = model(
                             x.input_ids,
