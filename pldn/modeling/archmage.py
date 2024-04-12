@@ -60,7 +60,7 @@ class ArchMAGE(PreTrainedModel):
     def encode(self, input_ids):
         z = self.transformer.wte(input_ids)
         z = z / z.norm(dim=-1, keepdim=True)
-        z = z * self.z_scale * np.sqrt(z.shape[-1])
+        z = z * self.z_scale
 
         # shift z to the left
         z_out = torch.zeros_like(z)
