@@ -7,9 +7,9 @@ import torch.nn.functional as F
 from transformers import PreTrainedModel
 from transformers.models.gpt2.modeling_gpt2 import GPT2Block, GPT2Attention
 
-from model.layers import MAGEMLP
-from model.model_utils import get_gpt2_causal_mask
-from utils import DotDict
+from modeling.layers import MAGEMLP
+from modeling.model_utils import get_gpt2_causal_mask
+from utils.data_utils import DotDict
 
 
 class MAGEBlock(nn.Module):

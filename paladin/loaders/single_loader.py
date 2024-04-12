@@ -4,7 +4,7 @@ import huggingface_hub as hf
 import numpy as np
 import pandas as pd
 
-from loader.base_loader import BaseLoader
+from loaders.base_loader import BaseLoader
 
 
 class SingleLoader(BaseLoader):

@@ -6,7 +6,7 @@ import pandas as pd
 import os
 from tqdm.notebook import tqdm
 
-from loader.base_loader import BaseLoader
+from loaders.base_loader import BaseLoader
 
 
 class FullLoader(BaseLoader):
