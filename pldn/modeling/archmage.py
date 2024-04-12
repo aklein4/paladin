@@ -53,7 +53,7 @@ class ArchMAGE(PreTrainedModel):
         super().__init__(config)
         self.z_scale = config.z_scale
 
-        self.transformer = MAGEModel(config)
+        self.transformer = ArchMAGETransformer(config)
         self.lm_head = nn.Linear(config.hidden_size, config.vocab_size, bias=False)
 
 
