@@ -6,6 +6,7 @@ import torch.nn.functional as F
 
 from transformers import PreTrainedModel
 from transformers.models.gpt2.modeling_gpt2 import GPT2Block, GPT2Attention
+from transformers.models.gpt2.configuration_gpt2 import GPT2Config
 
 from modeling.layers import MAGEMLP
 from modeling.model_utils import get_gpt2_causal_mask
@@ -144,6 +145,7 @@ class MAGEModel(PreTrainedModel):
      - Uses MAGEBlock instead of GPT2Block.
      - Can be easily modified to use different block types.
     """
+    config_class = GPT2Config
 
     def _init_weights(*args, **kwargs):
         # need this for some versions for transformers?

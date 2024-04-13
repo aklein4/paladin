@@ -49,6 +49,8 @@ class ArchMAGETransformer(MAGEModel):
 class ArchMAGE(PreTrainedModel):
     """ Linear-flow language model based on MAGE.
     """
+    config_class = ArchMAGEConfig
+
     def __init__(self, config):
         super().__init__(config)
         self.z_scale = config.z_scale
