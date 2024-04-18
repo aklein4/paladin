@@ -90,11 +90,47 @@ def add_noise(
 
     Args:
         x (torch.Tensor): Input tensor [B, S, D].
-        t (torch.Tensor): Noise time [B, S], float in [0, 1].
+        t (torch.Tensor): Noise time [B, S], float in [0, 1]. Can also be float.
         noise (torch.Tensor): Noise tensor [B, S, D].
 
     Returns:
         torch.Tensor: Noisy tensor [B, S, D].
     """
-    t = t[:, :, None]
+    if not isinstance(t, float):
+        t = t[:, :, None]
     return (1 - t) * x + t * noise
+
+
+def flow_step(
+    xt: torch.Tensor,
+    t: torch.Tensor,
+    pred_x0: torch.Tensor,
+    dt: torch.Tensor
+):
+    """ Perform a single flow step.
+
+    Args:
+        xt (torch.Tensor): Input tensor [B, S, D].
+        t (torch.Tensor): Time tensor [B, S], float in [0, 1]. Can also be float.
+        pred_x0 (torch.Tensor): Predicted x0 tensor [B, S, D].
+        dt (torch.Tensor): Time size [B, S], float in [0, 1]. Can also be float.
+        
+    Returns:
+        torch.Tensor: Output tensor [B, S, D].
+    """
+    if isinstance(t, float):
+        assert t > 0
+    else:
+        t = t[:, :, None]
+        assert (t > 0).all()
+
+    if isinstance(dt, float):
+        assert dt > 0
+    else:
+        dt = dt[:, :, None]
+        assert (dt > 0).all()
+
+    x1 = pred_x0 + (xt - pred_x0) / t
+    v = pred_x0 - x1
+
+    return xt + v * dt

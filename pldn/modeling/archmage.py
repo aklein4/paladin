@@ -71,7 +71,14 @@ class ArchMAGE(PreTrainedModel):
         return z_out
     
 
-    def forward(self, input_ids, z, t, memory=None):
+    def forward(
+        self,
+        input_ids,
+        z, t,
+        memory=None,
+        get_x0=False,
+        get_adj_logits=False
+    ):
         out = self.transformer(
             input_ids=input_ids,
             memory=memory,
@@ -82,10 +89,18 @@ class ArchMAGE(PreTrainedModel):
         logits = self.lm_head(out.output)
         logits = F.log_softmax(logits, dim=-1)
 
-        return DotDict(
+        output = DotDict(
             logits=logits,
             memory=out.memory,
         )
+
+        if get_x0:
+            p = F.softmax(logits, dim=-1).unsqueeze(-1)
+            codebook = self.transformer.wte.weight.detach()[None, None]
+            output.x0 = (p * codebook).sum(dim=-2)
+        
+        if get_adj_logits:
+
 
 
     def prepare_training(self, memory_grad):
