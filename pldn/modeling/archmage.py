@@ -87,7 +87,7 @@ class ArchMAGE(PreTrainedModel):
         logits = self.lm_head(out.output)
         logits = F.log_softmax(logits, dim=-1)
 
-        output = DotDict(
+        return DotDict(
             logits=logits,
             memory=out.memory,
         )
