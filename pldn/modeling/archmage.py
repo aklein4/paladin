@@ -113,7 +113,7 @@ class ArchMAGE(PreTrainedModel):
         while codebook.dim() < xt.dim()+1:
             codebook = codebook.unsqueeze(0)
         
-        xt = xt.unsqueeze(-2).expand(*([-1]*xt.dim()-1), codebook.shape[-2], -1)
+        xt = xt.unsqueeze(-2).expand(*([-1]*(xt.dim()-1)), codebook.shape[-2], -1)
 
         dist = torch.distributions.Normal(
             codebook * (1-t),
