@@ -105,7 +105,7 @@ class ArchMAGE(PreTrainedModel):
 
 
     @torch.no_grad()
-    def get_adj_logits(self, xt, logits, t):
+    def get_normal_logits(self, xt, t):
         if not isinstance(t, float):
             t = t.unsqueeze(-1)
 
@@ -120,6 +120,13 @@ class ArchMAGE(PreTrainedModel):
             t
         )
         normal_logits = dist.log_prob(xt).sum(dim=-1)
+
+        return normal_logits
+
+
+    @torch.no_grad()
+    def get_adj_logits(self, xt, logits, t):
+        normal_logits = self.get_normal_logits(xt, t)
 
         adj_logits = logits - normal_logits
         adj_logits = F.log_softmax(adj_logits, dim=-1)
