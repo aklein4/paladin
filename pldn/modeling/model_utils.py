@@ -97,7 +97,7 @@ def add_noise(
         torch.Tensor: Noisy tensor [B, S, D].
     """
     if not isinstance(t, float):
-        t = t[:, :, None]
+        t = t.unsqueeze(-1)
     return (1 - t) * x + t * noise
 
 
@@ -121,13 +121,13 @@ def flow_step(
     if isinstance(t, float):
         assert t > 0
     else:
-        t = t[:, :, None]
+        t = t.unsqueeze(-1)
         assert (t > 0).all()
 
     if isinstance(dt, float):
         assert dt > 0
     else:
-        dt = dt[:, :, None]
+        dt = dt.unsqueeze(-1)
         assert (dt > 0).all()
 
     x1 = pred_x0 + (xt - pred_x0) / t

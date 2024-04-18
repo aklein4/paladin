@@ -76,8 +76,6 @@ class ArchMAGE(PreTrainedModel):
         input_ids,
         z, t,
         memory=None,
-        get_x0=False,
-        get_adj_logits=False
     ):
         out = self.transformer(
             input_ids=input_ids,
@@ -94,13 +92,39 @@ class ArchMAGE(PreTrainedModel):
             memory=out.memory,
         )
 
-        if get_x0:
-            p = F.softmax(logits, dim=-1).unsqueeze(-1)
-            codebook = self.transformer.wte.weight.detach()[None, None]
-            output.x0 = (p * codebook).sum(dim=-2)
-        
-        if get_adj_logits:
 
+    @torch.no_grad()
+    def get_x0(self, logits):
+        p = F.softmax(logits, dim=-1).unsqueeze(-1)
+
+        codebook = self.transformer.wte.weight.detach()
+        while codebook.dim() < p.dim():
+            codebook = codebook.unsqueeze(0)
+
+        return (p * codebook).sum(dim=-2)
+
+
+    @torch.no_grad()
+    def get_adj_logits(self, xt, logits, t):
+        if not isinstance(t, float):
+            t = t.unsqueeze(-1)
+
+        codebook = self.transformer.wte.weight.detach()
+        while codebook.dim() < xt.dim()+1:
+            codebook = codebook.unsqueeze(0)
+        
+        xt = xt.unsqueeze(-2).expand(*([-1]*xt.dim()-1), codebook.shape[-2], -1)
+
+        dist = torch.distributions.Normal(
+            codebook * (1-t),
+            t
+        )
+        normal_logits = dist.log_prob(xt).sum(dim=-1)
+
+        adj_logits = logits - normal_logits
+        adj_logits = F.log_softmax(adj_logits, dim=-1)
+
+        return adj_logits
 
 
     def prepare_training(self, memory_grad):
